@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tananyag – a lebontott felvételi gát</title>
+<script>
+  // A téma a lap kirajzolása előtt áll be (nincs villanás): mentett választás, különben a rendszerbeállítás.
+  (function () {
+    var t = null;
+    try { t = localStorage.getItem("tema"); } catch (e) {}
+    if (!t) t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", t);
+  })();
+</script>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f2f1ee;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --accent: #2a78d6;
+  --accent-soft: rgba(42, 120, 214, 0.09);
+  --warn: #b26b00;
+  --warn-soft: rgba(237, 161, 0, 0.12);
+  --extra: #6250d6;
+  --extra-soft: rgba(98, 80, 214, 0.08);
+  --band: rgba(11, 11, 11, 0.045);
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s-gray: #b3b1aa;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface: #1a1a19;
+  --surface-2: #232321;
+  --ink: #f0efec;
+  --ink-2: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --border: rgba(255, 255, 255, 0.10);
+  --accent: #5598e7;
+  --accent-soft: rgba(57, 135, 229, 0.13);
+  --warn: #eda100;
+  --warn-soft: rgba(237, 161, 0, 0.10);
+  --extra: #9085e9;
+  --extra-soft: rgba(144, 133, 233, 0.10);
+  --band: rgba(255, 255, 255, 0.05);
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s-gray: #5c5b57;
+  --shadow: none;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  transition: background .2s, color .2s;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+strong { font-weight: 640; }
+code {
+  font: 0.86em/1.4 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--surface-2); padding: 0.1em 0.38em; border-radius: 5px; word-break: break-word;
+}
+.formula {
+  font: 0.82rem/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  background: var(--surface-2); border-radius: 10px; padding: 12px 14px; margin: 12px 0;
+  white-space: pre-wrap; word-break: break-all; color: var(--ink);
+}
+
+/* ---------- fejléc ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 20; height: 56px;
+  display: flex; align-items: center; gap: 16px; padding: 0 24px;
+  background: color-mix(in srgb, var(--page) 86%, transparent);
+  backdrop-filter: saturate(1.4) blur(10px); -webkit-backdrop-filter: saturate(1.4) blur(10px);
+  border-bottom: 1px solid var(--border);
+}
+.topbar .brand { font-weight: 640; font-size: 0.95rem; letter-spacing: -0.01em; }
+.topbar .brand span { color: var(--muted); font-weight: 450; }
+.topbar .spacer { flex: 1; }
+.progress { position: absolute; left: 0; bottom: -1px; height: 2px; width: 0; background: var(--accent); }
+.icon-btn {
+  display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 12px;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink-2); font: inherit; font-size: 0.85rem; cursor: pointer;
+}
+.icon-btn:hover { color: var(--ink); }
+.icon-btn svg { width: 16px; height: 16px; }
+.menu-btn { display: none; }
+
+/* ---------- elrendezés ---------- */
+.layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); max-width: 1180px; margin: 0 auto; gap: 48px; padding: 0 24px; }
+nav.toc { position: sticky; top: 56px; align-self: start; max-height: calc(100vh - 56px); overflow: auto; padding: 36px 0 24px; }
+nav.toc .toc-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 10px 12px; }
+nav.toc ol { list-style: none; margin: 0; padding: 0; }
+nav.toc li a {
+  display: block; padding: 6px 12px; border-radius: 8px; color: var(--ink-2); font-size: 0.9rem; line-height: 1.35;
+  border-left: 2px solid transparent;
+}
+nav.toc li a:hover { background: var(--surface-2); text-decoration: none; color: var(--ink); }
+nav.toc li a.active { color: var(--ink); font-weight: 600; background: var(--surface-2); }
+nav.toc li.sub a { padding-left: 26px; font-size: 0.84rem; color: var(--muted); }
+nav.toc li.sub a.active { color: var(--ink); }
+nav.toc .num { display: inline-block; width: 1.4em; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+main { min-width: 0; max-width: 760px; padding: 40px 0 120px; }
+
+/* ---------- tipográfia ---------- */
+.hero { padding: 24px 0 8px; }
+.eyebrow { font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--accent); font-weight: 600; margin: 0 0 10px; }
+h1 { font-size: clamp(1.9rem, 4vw, 2.6rem); line-height: 1.15; letter-spacing: -0.025em; margin: 0 0 16px; font-weight: 700; }
+.lead { font-size: 1.15rem; color: var(--ink-2); margin: 0 0 20px; }
+h2 {
+  font-size: 1.6rem; letter-spacing: -0.02em; line-height: 1.25; margin: 0 0 6px; font-weight: 680;
+}
+h2 .part { display: block; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.09em; color: var(--muted); font-weight: 600; margin-bottom: 8px; }
+h3 { font-size: 1.18rem; letter-spacing: -0.01em; margin: 40px 0 8px; font-weight: 650; line-height: 1.35; }
+h4 { font-size: 1rem; margin: 28px 0 6px; font-weight: 650; }
+.dia { color: var(--muted); font-weight: 500; font-size: 0.85em; white-space: nowrap; }
+section.part-sec { padding-top: 56px; margin-top: 56px; border-top: 1px solid var(--border); }
+section.part-sec:first-of-type { border-top: 0; margin-top: 24px; padding-top: 24px; }
+p { margin: 0 0 14px; }
+ul, ol { padding-left: 1.3em; margin: 0 0 14px; }
+li { margin: 4px 0; }
+.muted { color: var(--muted); }
+.small { font-size: 0.88rem; }
+
+/* ---------- útiterv ---------- */
+.roadmap { margin: 26px 0 8px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); box-shadow: var(--shadow); overflow: hidden; }
+.roadmap a {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) minmax(0, 0.9fr); gap: 4px 16px; align-items: baseline;
+  padding: 14px 20px; color: var(--ink); border-top: 1px solid var(--grid); transition: background .15s;
+}
+.roadmap a:first-child { border-top: 0; }
+.roadmap a:hover { text-decoration: none; background: var(--surface-2); }
+.roadmap .n { font-size: 0.82rem; color: var(--accent); font-weight: 650; font-variant-numeric: tabular-nums; }
+.roadmap .t { font-weight: 640; }
+.roadmap .q { color: var(--ink-2); font-weight: 400; }
+.roadmap .m { font-size: 0.82rem; color: var(--muted); line-height: 1.4; }
+@media (max-width: 620px) { .roadmap a { grid-template-columns: 34px minmax(0, 1fr); } .roadmap .m { grid-column: 2; } }
+
+/* ---------- kártyák, dobozok ---------- */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 22px 24px; margin: 22px 0; box-shadow: var(--shadow); }
+.kitero { border-top: 3px solid var(--accent); }
+.kitero > .eyebrow { margin-bottom: 4px; }
+.kitero > h3 { margin-top: 0; }
+.callout { border-radius: 12px; padding: 14px 16px 2px; margin: 18px 0; font-size: 0.95rem; background: var(--surface-2); }
+.callout .ct { display: flex; align-items: center; gap: 8px; font-weight: 640; margin-bottom: 6px; font-size: 0.92rem; }
+.callout .ct svg { width: 16px; height: 16px; flex: none; }
+.callout.warn { background: var(--warn-soft); }
+.callout.warn .ct { color: var(--warn); }
+.callout.extra { background: var(--extra-soft); }
+.callout.extra .ct { color: var(--extra); }
+.callout.tip { background: var(--accent-soft); }
+.callout.tip .ct { color: var(--accent); }
+.xl {
+  display: flex; gap: 10px; align-items: flex-start; font-size: 0.86rem; color: var(--ink-2);
+  border-left: 2px solid var(--axis); padding: 2px 0 2px 12px; margin: 14px 0;
+}
+.xl b { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.tag {
+  display: inline-block; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; font-weight: 650;
+  padding: 2px 8px; border-radius: 999px; vertical-align: 2px; margin-left: 6px;
+}
+.tag.extra { color: var(--extra); background: var(--extra-soft); }
+.tag.mini { color: var(--ink-2); background: var(--surface-2); }
+
+/* ---------- statok ---------- */
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin: 22px 0; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; box-shadow: var(--shadow); }
+.stat .l { font-size: 0.82rem; color: var(--ink-2); line-height: 1.35; }
+.stat .v { font-size: 1.75rem; font-weight: 650; letter-spacing: -0.02em; margin: 6px 0 2px; line-height: 1.15; }
+.stat .c { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+.stat .c.up::before { content: "▲ "; font-size: 0.7em; }
+.stat .c.down::before { content: "▼ "; font-size: 0.7em; }
+
+/* ---------- táblázatok ---------- */
+.tbl-wrap { overflow-x: auto; margin: 14px 0 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { font-weight: 600; color: var(--ink-2); font-size: 0.8rem; background: var(--surface-2); white-space: nowrap; }
+tr:last-child td { border-bottom: 0; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.hl td { background: var(--accent-soft); }
+tr.total td { font-weight: 600; }
+table.compact td, table.compact th { padding: 7px 10px; }
+
+/* ---------- diagramok ---------- */
+figure.chart { margin: 22px 0; background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 18px 18px 8px; box-shadow: var(--shadow); }
+figure.chart .ttl { font-weight: 640; font-size: 0.98rem; line-height: 1.35; }
+figure.chart .sub { font-size: 0.83rem; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 4px; font-size: 0.82rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { display: inline-block; width: 16px; height: 2px; border-radius: 2px; }
+.legend i.box { width: 10px; height: 10px; border-radius: 3px; }
+.plot { position: relative; width: 100%; }
+.plot svg { display: block; width: 100%; overflow: visible; }
+.plot text { font-size: 11.5px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.plot .grid line { stroke: var(--grid); stroke-width: 1; }
+.plot .base { stroke: var(--axis); stroke-width: 1; }
+.plot .lbl { fill: var(--ink-2); font-size: 11.5px; }
+.plot .lbl-strong { fill: var(--ink); font-size: 11.5px; font-weight: 600; }
+.plot .band { fill: var(--band); }
+.plot .rule { stroke: var(--ink-2); stroke-width: 1; opacity: .55; }
+.plot .xhair { stroke: var(--ink-2); stroke-width: 1; opacity: .5; }
+.plot .hit { fill: transparent; cursor: crosshair; }
+.plot .bar { transition: opacity .12s; }
+.plot .bar:hover, .plot .bar:focus { opacity: .78; outline: none; }
+details.tv { margin: 6px 0 4px; font-size: 0.85rem; }
+details.tv summary { color: var(--muted); cursor: pointer; list-style: none; display: inline-flex; gap: 6px; align-items: center; padding: 4px 0; }
+details.tv summary::-webkit-details-marker { display: none; }
+details.tv summary::before { content: "▸"; transition: transform .15s; }
+details.tv[open] summary::before { transform: rotate(90deg); }
+details.tv .tbl-wrap { margin: 8px 0 10px; max-height: 320px; overflow: auto; }
+#tip {
+  position: fixed; z-index: 50; pointer-events: none; opacity: 0; transition: opacity .08s;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 8px 11px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.14); font-size: 0.8rem; min-width: 120px; max-width: 260px; line-height: 1.45;
+}
+#tip .h { color: var(--muted); font-size: 0.75rem; margin-bottom: 3px; }
+#tip .r { display: flex; align-items: center; gap: 8px; }
+#tip .r i { width: 12px; height: 2px; border-radius: 2px; flex: none; }
+#tip .r b { font-weight: 650; font-variant-numeric: tabular-nums; }
+#tip .r span { color: var(--ink-2); }
+
+/* ---------- vezérlők ---------- */
+.seg { display: inline-flex; background: var(--surface-2); border-radius: 999px; padding: 3px; gap: 2px; margin: 4px 0 2px; }
+.seg button {
+  font: inherit; font-size: 0.86rem; border: 0; background: transparent; color: var(--ink-2);
+  padding: 6px 16px; border-radius: 999px; cursor: pointer;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg button:focus-visible, .icon-btn:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ctrl-label { font-size: 0.8rem; color: var(--muted); margin-right: 8px; }
+.calc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; margin: 16px 0; }
+.calc label { display: flex; flex-direction: column; gap: 5px; font-size: 0.82rem; color: var(--ink-2); }
+.calc input {
+  font: inherit; font-size: 1rem; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--surface-2); color: var(--ink); width: 100%; font-variant-numeric: tabular-nums;
+}
+.calc .grp { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted); grid-column: 1 / -1; margin-top: 4px; }
+.result { font-size: 1.05rem; }
+
+/* ---------- harmonika (gyakorlás, kvíz) ---------- */
+details.qa { border: 1px solid var(--border); border-radius: 12px; background: var(--surface); margin: 8px 0; }
+details.qa > summary { cursor: pointer; padding: 13px 44px 13px 16px; list-style: none; font-weight: 560; position: relative; line-height: 1.45; }
+details.qa > summary::-webkit-details-marker { display: none; }
+details.qa > summary::after {
+  content: ""; position: absolute; right: 18px; top: 50%; width: 8px; height: 8px; margin-top: -6px;
+  border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: rotate(45deg); transition: transform .15s;
+}
+details.qa[open] > summary::after { transform: rotate(225deg); margin-top: -2px; }
+details.qa .ans { padding: 0 16px 6px; color: var(--ink-2); border-top: 1px solid var(--grid); padding-top: 12px; }
+.qa-group > summary { font-weight: 640; }
+.qa-group .inner { padding: 4px 12px 10px; }
+.qa-group .inner details.qa { background: var(--surface-2); }
+.qn { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+
+.summary-list { counter-reset: s; list-style: none; padding: 0; }
+.summary-list li { counter-increment: s; position: relative; padding-left: 36px; margin: 10px 0; }
+.summary-list li::before {
+  content: counter(s); position: absolute; left: 0; top: 1px; width: 24px; height: 24px; border-radius: 50%;
+  background: var(--accent-soft); color: var(--accent); font-size: 0.8rem; font-weight: 650; display: grid; place-items: center;
+}
+footer { color: var(--muted); font-size: 0.82rem; border-top: 1px solid var(--border); margin-top: 64px; padding-top: 20px; }
+
+/* ---------- mobil ---------- */
+@media (max-width: 960px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 18px; }
+  nav.toc {
+    position: fixed; top: 56px; left: 0; bottom: 0; width: 290px; z-index: 30; max-height: none;
+    background: var(--surface); border-right: 1px solid var(--border); padding: 24px 12px;
+    transform: translateX(-100%); transition: transform .2s;
+  }
+  body.nav-open nav.toc { transform: none; box-shadow: 0 0 40px rgba(0,0,0,.25); }
+  .menu-btn { display: inline-flex; }
+  .topbar { padding: 0 14px; gap: 10px; }
+  .topbar .brand { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .topbar .brand span { display: none; }
+  main { padding-top: 20px; }
+  .calc { grid-template-columns: 1fr; }
+  .card { padding: 18px 16px; }
+  figure.chart { padding: 14px 12px 6px; }
+}
+@media print {
+  .topbar, nav.toc, details.tv { display: none; }
+  .layout { display: block; }
+  details.qa { break-inside: avoid; }
+}
+.sablon-figyelmeztetes {
+  position: sticky; top: 0; z-index: 100; padding: 10px 20px; font-size: 0.9rem;
+  background: var(--warn-soft); color: var(--ink); border-bottom: 1px solid var(--warn);
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="icon-btn menu-btn" id="menuBtn" aria-label="Tartalomjegyzék">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h12"/></svg>
+  </button>
+  <div class="brand">A lebontott felvételi gát <span>· tananyag</span></div>
+  <div class="spacer"></div>
+  <button class="icon-btn" id="themeBtn" aria-label="Világos vagy sötét téma">
+    <svg id="iconSun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3"/></svg>
+    <svg id="iconMoon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M13.5 9.5A5.5 5.5 0 0 1 6.5 2.5a5.5 5.5 0 1 0 7 7Z"/></svg>
+    <span id="themeLbl">Sötét</span>
+  </button>
+  <div class="progress" id="progress"></div>
+</header>
+
+<div class="layout">
+<nav class="toc" id="toc" aria-label="Tartalom">
+  <div class="toc-title">Tartalom</div>
+  <ol>
+    <li><a href="#bevezeto"><span class="num">·</span>Bevezető</a></li>
+    <li><a href="#adat"><span class="num">1</span>Az adat</a></li>
+    <li><a href="#mi-tortent"><span class="num">2</span>Mi történt?</a></li>
+    <li class="sub"><a href="#tukorkep">Tükörkép</a></li>
+    <li class="sub"><a href="#k1">Kitérő 1 · Indexálás</a></li>
+    <li><a href="#bizonyitek"><span class="num">3</span>A bizonyíték</a></li>
+    <li class="sub"><a href="#k2">Kitérő 2 · DiD</a></li>
+    <li class="sub"><a href="#k3">Kitérő 3 · Arányok hányadosa</a></li>
+    <li class="sub"><a href="#k4">Kitérő 4 · Eseményelemzés</a></li>
+    <li><a href="#mechanizmus"><span class="num">4</span>A mechanizmus</a></li>
+    <li class="sub"><a href="#k5">Kitérő 5 · Khi-négyzet</a></li>
+    <li class="sub"><a href="#k6">Kitérő 6 · Eloszlás</a></li>
+    <li class="sub"><a href="#k7">Kitérő 7 · Rétegzés</a></li>
+    <li><a href="#biztos"><span class="num">5</span>Biztos ez volt?</a></li>
+    <li class="sub"><a href="#k8">Kitérő 8 · Placebo</a></li>
+    <li class="sub"><a href="#k9">Kitérő 9 · Hármas különbség</a></li>
+    <li class="sub"><a href="#alternativak">Alternatív magyarázatok</a></li>
+    <li><a href="#osszefoglalas"><span class="num">✓</span>Összefoglalás</a></li>
+    <li class="sub"><a href="#dontes">Döntési táblázat</a></li>
+    <li class="sub"><a href="#kviz">Ellenőrizd magad</a></li>
+  </ol>
+</nav>
+
+<main>
+<!-- ===================== BEVEZETŐ ===================== -->
+<section id="bevezeto" class="hero">
+  <p class="eyebrow">Tananyag · Részidős jelentkezők</p>
+  <h1>Nem a felnőttek akartak hirtelen tanulni: 2023-ban újra beengedték őket</h1>
+  <p class="lead">Hogyan lesz egy adathalmazból bizonyított történet? Végigmegyünk azon, ahogy a felvi.hu felvételi adataiból
+    felépült a „Részidős jelentkezők” diasor. A sorrend ugyanaz, mint a diáké, de minden lépésnél megállunk.</p>
+  <p>Minden lépésnél három kérdés: <strong>mit</strong> számolunk, <strong>miért</strong> pont így, és a statisztikai
+    lépéseknél <strong>miért éppen azt a módszert</strong> választottuk. Minden módszerhez tartozik egy
+    <strong>minipélda</strong> kitalált, kicsi számokkal: előbb ott látod, hogyan működik, utána alkalmazzuk a valódi adatra.</p>
+
+  <div class="roadmap">
+    <a href="#adat"><span class="n">01</span><span><span class="t">Az adat</span> <span class="q">· Mit mérünk egyáltalán?</span></span><span class="m">definíciók</span></a>
+    <a href="#mi-tortent"><span class="n">02</span><span><span class="t">Mi történt?</span> <span class="q">· Mekkora volt az ugrás?</span></span><span class="m">százalékos változás, indexálás</span></a>
+    <a href="#bizonyitek"><span class="n">03</span><span><span class="t">A bizonyíték</span> <span class="q">· Tényleg a szabály okozta?</span></span><span class="m">különbségek különbsége, eseményelemzés</span></a>
+    <a href="#mechanizmus"><span class="n">04</span><span><span class="t">A mechanizmus</span> <span class="q">· Hogyan hatott a 280 pont?</span></span><span class="m">khi-négyzet, MIN és MEDIÁN, rétegzés</span></a>
+    <a href="#biztos"><span class="n">05</span><span><span class="t">Biztos ez volt?</span> <span class="q">· Nem lehet véletlen vagy más ok?</span></span><span class="m">placebo-rangsor, hármas különbség</span></a>
+  </div>
+
+  <div class="callout tip">
+    <div class="ct"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2" y="2" width="12" height="12" rx="2"/><path d="M2 6h12M6 6v8"/></svg>Minden számítás Excelben is elvégezhető</div>
+    <p>Összegek (SZUMHATÖBB / SUMIFS), darabszámok (DARABHATÖBB / COUNTIFS), a ponthatáros feltételekhez SZORZATÖSSZEG /
+      SUMPRODUCT, arányok és hányadosok, MIN, MEDIÁN, rangsor és khi-négyzet próba. Az Excel-pár a
+      <code>felviBI_export_26P_stat (részidős diák).xlsx</code> munkafüzet: a <code>FELVI_EXPORT_13A26A</code> lap a nyers
+      adat, a <code>Részidő_3_dia</code> … <code>Részidő_13_dia</code> lapok diánként ugyanezeket a számokat adják képletekkel.</p>
+    <p>Minden résznél jelöljük, melyik lapon találod (<span class="xl" style="display:inline;border:0;padding:0;margin:0"><b>Excel</b></span> sor).
+      Ami túlmegy az Excelen, az <span class="tag extra" style="margin:0">Kiegészítés</span> címkét kap: ezek a számok az
+      Excel-lapokon nem szerepelnek.</p>
+  </div>
+</section>
+
+<!-- ===================== 1. AZ ADAT ===================== -->
+<section id="adat" class="part-sec">
+  <h2><span class="part">1. rész</span>Az adat: mit mérünk egyáltalán?</h2>
+  <p>Az alap a felvi.hu statisztikai exportja (<code>felviBI_export_26P_stat.xlsx</code>, ugyanez az adat a számításos
+    munkafüzet <code>FELVI_EXPORT_13A26A</code> lapja). <strong>Egy sor = egy meghirdetett képzés egy adott évben</strong>,
+    például „ELTE, gazdálkodás és menedzsment BSc, levelező, önköltséges, 2023”. A sorban benne van, hányan jelentkeztek,
+    hányat vettek fel, és mi lett a ponthatár.</p>
+  <p class="muted small">Betöltve: 213 841 sor, ebből az általános eljárás 150 058 sor, 2013–2026.</p>
+
+  <p>Mielőtt bármit számolnánk, három döntést kell meghozni. Ezek nélkül a számok összehasonlíthatatlanok lennének.</p>
+
+  <div class="card">
+    <h4 style="margin-top:0">1. Melyik jelentkezőszámot használjuk?</h4>
+    <p>A <code>JELENTKEZES</code> minden jelentkezést számol, és egy ember akár öt helyre is jelentkezhet. Ha azt akarjuk
+      tudni, <em>hány ember</em> akart valamit, ez félrevezető. Ezért a <strong><code>JELENTKEZOK_ELSO_HELYES</code></strong>
+      oszlopot használjuk: hányan tették az adott képzést az <em>első</em> helyre. Így egy ember pontosan egyszer számít.</p>
+    <h4>2. Mit nevezünk részidősnek?</h4>
+    <p>A <strong>levelező és a távoktatásos</strong> munkarendet: ezekre jellemzően dolgozó felnőttek jelentkeznek. Az esti
+      tagozat az összesnek kb. 1%-a: nem számít részidősnek, de a „minden munkarend” összesben (a részidő arányának
+      nevezőjében) benne van.</p>
+    <h4>3. Melyik eljárást nézzük?</h4>
+    <p style="margin-bottom:0">Csak az <strong>általános</strong> (szeptemberi kezdésű, <code>A</code>) eljárást. A februári
+      (<code>K</code>) eljárás kicsi, és más ütemben fut, a kettőt összeadni olyan lenne, mintha almát körtével.</p>
+  </div>
+
+  <div class="callout">
+    <div class="ct">Excel-apróság</div>
+    <p>Az exportban az <code>ELJARAS_EV</code> kétjegyű (23 = 2023), ezért az Excel-képletekben az év feltétele „év − 2000”.
+      A levelező és a távoktatás két külön <code>MUNKAREND</code>-érték, ezért a részidős összeg két SZUMHATÖBB összege.</p>
+  </div>
+
+  <details class="tv"><summary>Így néz ki néhány sor (csak a fontos oszlopok)</summary>
+    <div class="tbl-wrap"><table class="compact"><thead><tr><th class=num>Év</th><th>Intézmény</th><th>Képzés</th><th>Szint</th><th>Munkarend</th><th>Finanszírozás</th><th class=num>Jelentkezés</th><th class=num>Első helyes</th><th class=num>Felvett</th><th class=num>Ponthatár</th></tr></thead><tbody><tr><td class=num>2021</td><td>Eötvös Loránd Tudományegyetem</td><td>osztatlan tanári [10 félév [biológiatanár (egészségtan) (természettudományi gyakorlatok); történelemtanár és állampolgári ismeretek tanára]]</td><td>Osztatlan</td><td>Nappali</td><td>Önköltséges</td><td class=num>0</td><td class=num>0</td><td class=num>0</td><td class=num>–</td></tr>
+<tr><td class=num>2023</td><td>Nyíregyházi Egyetem</td><td>tanári [2 félév [népzene- és népikultúra-tanár]]</td><td>Mesterképzés</td><td>Levelező</td><td>Önköltséges</td><td class=num>6</td><td class=num>0</td><td class=num>0</td><td class=num>–</td></tr>
+<tr><td class=num>2013</td><td>Kodolányi János Főiskola</td><td>történelem</td><td>Alapképzés</td><td>Levelező</td><td>Költségtérítéses</td><td class=num>12</td><td class=num>2</td><td class=num>4</td><td class=num>314</td></tr>
+<tr><td class=num>2022</td><td>Budapesti Gazdasági Egyetem</td><td>kereskedelem és marketing [kereskedelmi]</td><td>FOSZK</td><td>Nappali</td><td>Önköltséges</td><td class=num>87</td><td class=num>8</td><td class=num>5</td><td class=num>242</td></tr>
+<tr><td class=num>2019</td><td>Debreceni Egyetem</td><td>pénzügy és számvitel [vállalkozási]</td><td>FOSZK</td><td>Nappali</td><td>Állami ösztöndíjjal támogatott</td><td class=num>137</td><td class=num>38</td><td class=num>52</td><td class=num>242</td></tr>
+<tr><td class=num>2026</td><td>Dunaújvárosi Egyetem</td><td>gépészmérnöki</td><td>Alapképzés</td><td>Nappali</td><td>Állami ösztöndíjjal támogatott</td><td class=num>154</td><td class=num>38</td><td class=num>35</td><td class=num>317</td></tr></tbody></table></div>
+  </details>
+</section>
+
+<!-- ===================== 2. MI TÖRTÉNT ===================== -->
+<section id="mi-tortent" class="part-sec">
+  <h2><span class="part">2. rész</span>Mi történt? Az ugrás mérete <span class="dia">3. dia</span></h2>
+  <p>Kezdjük a legegyszerűbb kérdéssel: mennyivel jelentkeztek többen részidős képzésre 2023-ban, mint 2022-ben?</p>
+
+  <div class="stats">
+    <div class="stat"><div class="l">Részidős jelentkezők, 2022</div><div class="v">29 728</div><div class="c">első helyes jelentkező</div></div>
+    <div class="stat"><div class="l">Részidős jelentkezők, 2023</div><div class="v">48 439</div><div class="c up">+63% egy év alatt</div></div>
+    <div class="stat"><div class="l">A részidő aránya az összesből</div><div class="v">30% → 38%</div><div class="c">2026-ban 41%</div></div>
+  </div>
+
+  <p><strong>Hogyan jön ki a +63%?</strong> Százalékos változás = (új érték / régi érték) − 1 = 48 439 / 29 728 − 1 =
+    <strong>+62,9%</strong>.</p>
+  <p><strong>Miért nézzük az arányt is?</strong> Mert a +63% önmagában lehetne „mindenki többet jelentkezett” is. Ha az összes
+    jelentkező is ugyanennyivel nőtt volna, a részidő aránya nem változna. De az arány 30%-ról 38%-ra ugrott, és
+    2026-ban is 41%. Vagyis a részidős jelentkezés <strong>a többinél jobban</strong> nőtt, és ez
+    <strong>tartós</strong> maradt: szerkezetváltás. Ez a történet kiinduló kérdése: <em>mi okozta?</em></p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_3_dia</code>: SZUMHATÖBB munkarendenként, majd részidős / összes.</span></div>
+
+  <h3 id="tukorkep">Tükörkép: ahol a szabály bejön, zuhan, ahol kimegy, ugrik <span class="dia">4. dia</span></h3>
+  <p>A gyanú: két felvételi szabály. <strong>2020-ban</strong> kötelező lett alapképzésre a legalább egy emelt szintű érettségi.
+    <strong>2023-ban</strong> ezt eltörölték, és vele együtt a 280 pontos minimumpontszámot is. Nézzük a részidős alapképzést
+    évről évre, és váltsd át nappalira is.</p>
+
+  <figure class="chart" id="ch4">
+    <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px">
+      <div><div class="ttl" id="ch4ttl">Részidős alapképzés: első helyes jelentkezők</div>
+        <div class="sub">A két függőleges vonal a két szabályváltozás</div></div>
+      <div class="seg" role="group" aria-label="Munkarend">
+        <button type="button" data-mr="Részidős" aria-pressed="true">Részidős</button>
+        <button type="button" data-mr="Nappali" aria-pressed="false">Nappali</button>
+      </div>
+    </div>
+    <div class="plot"></div>
+  </figure>
+  <p id="ch4txt" class="callout tip" style="padding:12px 16px"></p>
+  <p>Részidőn a vonal 2020-ban <strong>−40%</strong>, 2023-ban <strong>+101%</strong>. Nappalin ugyanez csak
+    −19% és +18%. A 2023-as szint (32 312 fő) már <strong>+44%-kal a 2019-es, szabály előtti szint
+    fölött</strong> van (32 312 / 22 451 − 1). A tükörkép beszédes, de ez még csak <strong>egybeesés</strong>: 2020-ban a
+    COVID vagy más is közrejátszhatott. Ezt a 3. részben kell kizárni.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_4_dia</code> (részidős idősor, B26: +44%), <code>Részidő_6_dia</code>
+    (nappali). <span class="tag extra">Kiegészítés</span> A nappali teljes idősor csak itt van: az Excelben nappalira csak
+    2019, 2020, 2022 és 2023 szerepel.</span></div>
+
+  <!-- Kitérő 1 -->
+  <div class="card kitero" id="k1">
+    <p class="eyebrow">Statisztikai kitérő 1</p>
+    <h3>Indexálás – hogyan hasonlíts össze különböző méretű dolgokat?</h3>
+    <p><strong>Mi ez?</strong> Egy kiválasztott évet (bázisév) 100-nak veszünk, és minden más évet ehhez viszonyítunk:
+      <strong>index = adott év / bázisév × 100</strong>.</p>
+    <p><strong>Miért kell?</strong> A képzési szintek nagyon különböző méretűek. A részidős alapképzésre kb. 22 000-en
+      jelentkeznek, a FOSZK-ra kb. 2 000-en. Egy ábrán a kis csoport vonala a tengely aljához lapulna. Az index mindenkit
+      ugyanarról a 100-ról indít, így csak az számít, <strong>ki hogyan mozdult</strong>.</p>
+    <p><span class="tag mini" style="margin-left:0">Minipélda</span> Két pékség forgalma:</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th class="num">2019</th><th class="num">2020</th><th class="num">Abszolút változás</th><th class="num">Index (2019 = 100)</th></tr></thead>
+      <tbody>
+        <tr><td>Kis pékség</td><td class="num">100</td><td class="num">120</td><td class="num">+20</td><td class="num"><strong>120</strong></td></tr>
+        <tr><td>Nagy pékség</td><td class="num">1 000</td><td class="num">1 100</td><td class="num">+100</td><td class="num"><strong>110</strong></td></tr>
+      </tbody></table></div>
+    <p>Abszolút számokban a nagy pékség nőtt többet (+100 vs. +20), arányaiban viszont a kicsi (+20% vs. +10%). Ha az a kérdés,
+      <em>kit ért erősebben</em> egy hatás, az index a helyes mérce.</p>
+    <p style="margin:0"><strong>Miért 2019 a bázis?</strong> Mert ez az utolsó év a szabály bevezetése előtt. Így minden
+      későbbi érték azt mutatja, hol tart a csoport a „szabály előtti” állapotához képest.</p>
+  </div>
+
+  <figure class="chart" id="ch5">
+    <div class="ttl">Részidős jelentkezők képzési szintenként, 2019 = 100 <span class="dia">5. dia</span></div>
+    <div class="sub">Az emelt szabály az alap- (és osztatlan) képzésre vonatkozott, a mesterre és a FOSZK-ra nem</div>
+    <div class="plot"></div>
+  </figure>
+  <p>2020-ban az alapképzés indexe <strong>60</strong>-ra esik, a mesterképzésé csak <strong>91</strong>-re,
+    a FOSZK-é nem is esik. Ez már erősebb jel: ott esett nagyot, <strong>ahová a szabály vonatkozott</strong>.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_5_dia</code>: index = adott év / 2019 × 100, a 2019-es sort <code>$</code> rögzíti.</span></div>
+
+  <div class="callout warn">
+    <div class="ct"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2 1.5 13.5h13L8 2Z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>Becsületes megjegyzés: mi van az osztatlan képzéssel?</div>
+    <p>A szabály az osztatlan képzésre (orvos, jogász, gyógyszerész, osztatlan tanári stb.) is vonatkozott, mégsem esett
+      vissza: részidőn 2020-ban még nőtt is (+4%). Elsőre ez ellentmond a történetnek. Ha viszont megnézzük, kik
+      jelentkeznek ide, összeáll a kép:</p>
+    <ul>
+      <li><strong>Ezek nehezebben elérhető képzések.</strong> A szabály előtt (2017–19) a nappali osztatlan sorok medián
+        ponthatára 365 pont volt, az alapképzésé 310. Ilyen pontszámhoz jellemzően többletpont kell, aminek
+        fő forrása az emelt szintű érettségi. Nekik az „egy emelt kötelező” szabály nem jelentett új akadályt. Nappalin az
+        osztatlan képzés 2020-ban csak <strong>−2%</strong>-ot mozdult, az alapképzés <strong>−19%</strong>-ot.</li>
+      <li><strong>Részidőn az osztatlan képzés szinte csak levelező jogász</strong> (a részidős osztatlan jelentkezők
+        kb. 85%-a). Ide sokan már diplomával jelentkeznek, és a szabály alól mentesült, akinek már volt felsőfokú
+        oklevele.</li>
+    </ul>
+    <p>Ez végül <strong>erősíti</strong> a történetet: a szabály ott hatott, ahol a jelentkezők jellemzően nem tettek emelt
+      érettségit. A korlát: a felvi-export nem mutatja, kinek van emelt érettségije vagy diplomája, ezért ez valószínűsítés,
+      nem bizonyíték. A bizonyítást ezért az alapképzésre építjük.</p>
+    <p><em>Ha egy adat nem illik a történetbe, ne söpörd a szőnyeg alá: mondd ki, és keress rá ellenőrizhető magyarázatot.</em></p>
+    <p class="small"><span class="tag extra" style="margin-left:0">Kiegészítés</span> A 365 és 310 pontos
+      medián, a nappali osztatlan −2% és a kb. 85% az Excelben nem szerepel külön számításként, a
+      <code>Részidő_5_dia</code> lap csak szövegesen említi az érvet. (A nappali alapképzés −19%-a a
+      <code>Részidő_6_dia</code> lapon van.)</p>
+  </div>
+
+  <figure class="chart" id="ch6">
+    <div class="ttl">Alapképzés: változás a két szabályváltozáskor <span class="dia">6. dia</span></div>
+    <div class="sub">Ugyanaz a szabály részidőn sokkal nagyobbat mozdított</div>
+    <div class="plot"></div>
+  </figure>
+  <p>Miért erősebb a hatás részidőn? A friss érettségizők (akik nappalira mennek) jellemzően tesznek emelt szintű érettségit.
+    A dolgozó felnőttek, akik évekkel ezelőtt érettségiztek, legtöbbször nem. A szabály tehát éppen őket zárta ki. Ez egy
+    <strong>mechanizmus-hipotézis</strong>, a 4. részben közvetlenül is teszteljük.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_6_dia</code>: változás = új év / előző év − 1.</span></div>
+</section>
+
+<!-- ===================== 3. A BIZONYÍTÉK ===================== -->
+<section id="bizonyitek" class="part-sec">
+  <h2><span class="part">3. rész</span>A bizonyíték: tényleg a szabály okozta? <span class="dia">7–8. dia</span></h2>
+  <p>Eddig azt láttuk, hogy a jelentkezés <em>együtt mozog</em> a szabállyal. De az együttmozgás nem bizonyítja az okot.
+    2020-ban jött a COVID, 2023-ban magas volt az infláció, és bármelyik hathatott a jelentkezésre. Kell egy módszer, amely
+    ezeket a „mindenkit érintő” hatásokat kiszűri.</p>
+
+  <div class="card kitero" id="k2">
+    <p class="eyebrow">Statisztikai kitérő 2</p>
+    <h3>Különbségek különbsége (difference-in-differences, DiD)</h3>
+    <p><strong>Mi ez?</strong> Két csoportot hasonlítunk össze egy esemény előtt és után:</p>
+    <ul>
+      <li>a <strong>kezelt</strong> csoportra hatott az esemény (nálunk: részidős <strong>alapképzés</strong>, rá vonatkozott az emelt érettségi),</li>
+      <li>a <strong>kontroll</strong> csoportra nem (nálunk: részidős <strong>mesterképzés</strong>).</li>
+    </ul>
+    <p>Nem az a kérdés, hogy a kezelt csoport változott-e, hanem az, hogy <strong>jobban</strong> változott-e, mint a kontroll.
+      A kontroll mutatja meg, mi történt volna a kezelttel a szabály nélkül.</p>
+    <p><strong>Miért éppen a mesterképzés a kontroll?</strong> Ugyanaz a közönség (dolgozó felnőttek), ugyanaz a gazdasági
+      környezet hat rá (COVID, infláció, bérek), csak a szabály nem. Ami mindkettőt érinti, az a különbségképzésnél kiesik.</p>
+
+    <p><span class="tag mini" style="margin-left:0">Minipélda · próbáld ki</span> Két kávézó. Az egyikben (kezelt) a tulaj
+      megemelte az árakat, a másikban (kontroll) nem. Közben egy hidegfront mindkettőnél csökkentette a forgalmat. Mennyi a
+      forgalomcsökkenésből az áremelés hatása? Írd át a számokat!</p>
+    <div class="calc" id="calc">
+      <div class="grp">Kezelt kávézó (áremelés + hidegfront)</div>
+      <label>Előtte (vendég/nap)<input type="number" min="1" max="10000" value="100" id="ke"></label>
+      <label>Utána<input type="number" min="1" max="10000" value="70" id="ku"></label>
+      <div class="grp">Kontroll kávézó (csak hidegfront)</div>
+      <label>Előtte<input type="number" min="1" max="10000" value="200" id="ce"></label>
+      <label>Utána<input type="number" min="1" max="10000" value="180" id="cu"></label>
+    </div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th class="num">Változás</th></tr></thead>
+      <tbody>
+        <tr><td>Kezelt kávézó (áremelés + hidegfront)</td><td class="num" id="o_k"></td></tr>
+        <tr><td>Kontroll kávézó (csak hidegfront)</td><td class="num" id="o_c"></td></tr>
+        <tr class="hl total"><td>Különbségek különbsége = (1 + kezelt) / (1 + kontroll) − 1</td><td class="num" id="o_d"></td></tr>
+      </tbody></table></div>
+    <p class="result" id="o_txt"></p>
+    <p><strong>Miért hányadost számolunk, és nem különbséget?</strong> A két kávézó különböző méretű. A hidegfront mindkettőnél
+      ugyanannyi <em>százalékot</em> vitt el, nem ugyanannyi vendéget. A szabályok is így hatnak. Ezért a változásokat
+      szorzószámként (1 + változás) kezeljük, és egymással osztjuk. Ugyanezt kapod a kezelt/kontroll arányból előtte és utána:
+      <span id="o_arany"></span>. Excelben egyetlen képlet, például <code>=(B3/C3)/(B2/C2)-1</code>. A
+      <code>Részidő_7_dia</code> lapon két lépésben: a D oszlop az arány (<code>=B20/C20</code>), az E a hatás
+      (<code>=D20/D$19-1</code>).</p>
+    <p style="margin:0"><strong>A módszer egyetlen, de kulcsfontosságú feltétele: a párhuzamos trendek.</strong> A szabály
+      nélkül a két csoport együtt mozgott volna. Ha a kontroll kávézó amúgy is folyamatosan fogyott volna, a DiD rossz
+      eredményt adna. Ezt a szabály <em>előtti</em> évekből ellenőrizzük (4. kitérő).</p>
+  </div>
+
+  <p><strong>A valódi adaton</strong> (részidős első helyes jelentkezők, időszakonként összeadva):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Időszak</th><th class="num">Alapképzés (kezelt)</th><th class="num">Mesterképzés (kontroll)</th><th class="num">Arány (alap / mester)</th><th class="num">DiD a bázishoz</th></tr></thead>
+    <tbody><tr><td>Bázis 2017–19</td><td class=num>64 248</td><td class=num>25 883</td><td class=num>2,482</td><td class=num>–</td></tr>
+<tr><td>Gát 2020–22</td><td class=num>47 654</td><td class=num>27 030</td><td class=num>1,763</td><td class=num>−29,0%</td></tr>
+<tr><td>Nyitva 2023–26</td><td class=num>134 844</td><td class=num>58 162</td><td class=num>2,318</td><td class=num>−6,6%</td></tr></tbody></table></div>
+  <p>A gát három évében az alapképzés a mesterhez képest <strong>−29,0%</strong>-kal maradt el a 2017–19-es viszonyhoz
+    képest. Durván: <strong>majdnem minden harmadik várható jelentkező hiányzott</strong>. A nyitás után (2023–26) az eltérés
+    csak −6,6%: a viszony majdnem visszaállt a bázisszintre.</p>
+
+  <div class="stats">
+    <div class="stat"><div class="l">Gát-hatás 2020–22</div><div class="v">−29,0%</div><div class="c">az alap/mester arány a 2017–19-eshez képest</div></div>
+    <div class="stat"><div class="l">2023–26 a bázishoz</div><div class="v">−6,6%</div><div class="c">a gát eltörlése után majdnem visszaállt</div></div>
+    <div class="stat"><div class="l">„Hiányzó” jelentkezők 2020–22</div><div class="v">≈ 19 400 fő</div><div class="c">évente ≈ 6 500</div></div>
+  </div>
+  <p><strong>Hogyan jön ki a „hiányzó” jelentkezők száma?</strong> A gát éveiben 47 654 részidős alapképzési
+    jelentkezőt figyeltünk meg. Ha a szabály −29,0%-kal csökkentette a jelentkezést, akkor szabály nélkül
+    47 654 / 0,7102 ≈ 67 095 jelentkező lett volna. A különbség ≈ <strong>19 400 fő</strong> három
+    év alatt, évente ≈ 6 500. Ez durva becslés: azt feltételezi, hogy szabály nélkül az alapképzés a mesterrel együtt
+    mozgott volna.</p>
+  <p><strong>Mit nem mond meg ez a szám?</strong> Azt, hogy mennyire biztos. Ezt nem számszerűsítjük. Helyette sorra
+    ellenőrizzük, hogy minden más jel ugyanabba az irányba mutat-e: eseményelemzés, placebo-évek, hármas különbség. Ha ezek
+    egybehangzanak, a −29% nem a véletlen műve.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_7_dia</code>: E20 (gát-hatás), E21 (nyitva), B29:B31 („hiányzó”, KEREKÍTÉS(…; −2)).</span></div>
+
+  <!-- Kitérő 3 -->
+  <div class="card kitero" id="k3">
+    <p class="eyebrow">Statisztikai kitérő 3</p>
+    <h3>Miért elég az arányok hányadosa, és mire figyeljünk?</h3>
+    <p>A 7. dia száma egyetlen képletből jön, ugyanabból, mint a kávézóknál. Nincs szükség bonyolult modellre: a hatás
+      <strong>arányos</strong> (százalékban értelmes), és két arány hányadosa pontosan ezt méri.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Lépés</th><th>Mit számolunk?</th><th>Excel</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1</td><td>Évenként a részidős alap- és mesterképzés, majd időszakonként összegezve: bázis (2017–19), gát (2020–22), nyitva (2023–26)</td><td><strong>SZUMHATÖBB</strong>, majd <strong>SZUMHA</strong> az időszak-címkére</td></tr>
+        <tr><td class="num">2</td><td>Időszakonként az arány: R = alap / mester</td><td>osztás</td></tr>
+        <tr><td class="num">3</td><td>Gát-hatás = R(gát) / R(bázis) − 1</td><td>osztás</td></tr>
+        <tr><td class="num">4</td><td>„Hiányzó” = megfigyelt / (1 + hatás) − megfigyelt, kerekítve</td><td>osztás, kivonás, KEREKÍTÉS <code>(…; -2)</code></td></tr>
+      </tbody></table></div>
+    <p>Az 1. lépés egy cellája (2017, részidős alapképzés) két SZUMHATÖBB összege, mert a levelező és a távoktatás két külön
+      <code>MUNKAREND</code>-érték. Az év az A oszlopból jön, − 2000:</p>
+    <div class="formula">=SZUMHATÖBB(JELENTKEZOK_ELSO_HELYES; ELJARAS_TIPUS; "A"; ELJARAS_EV; $A6-2000; KEPZESI_SZINT; "Alapképzés (BA/BSc)"; MUNKAREND; "Levelező")
+ + SZUMHATÖBB(…; MUNKAREND; "Távoktatás")</div>
+    <p>Az időszak-összeg ezután <code>=SZUMHA($D$6:$D$15; "bázis"; B$6:B$15)</code>, ahol a D oszlop az évek
+      időszak-címkéje. A <code>Részidő_13_dia</code> lap a másik utat mutatja: az évtartomány közvetlenül a SZUMHATÖBB-ben,
+      <code>ELJARAS_EV; "&gt;="&amp;17; ELJARAS_EV; "&lt;="&amp;19</code> feltétellel. A kettő ugyanazt adja.</p>
+    <p><strong>Miért elég ez?</strong> Mert a kontroll mindent kiszűr, ami mindkét csoportot ugyanúgy érte (COVID, infláció,
+      demográfia). Ami marad, az a kezelt csoport <em>többlet</em>változása. Három dologra viszont figyelni kell:</p>
+    <ol>
+      <li><strong>Mindkét időszakban ugyanazokat a csoportokat hasonlítsd.</strong> Ha egy képzés közben indul vagy megszűnik,
+        az arány már azt is méri, kik vannak benne.</li>
+      <li><strong>Az összegekből számolt arányban a nagy területek dominálnak.</strong> Nézd meg, hogy a hatás területenként is hasonló-e.</li>
+      <li><strong>A párhuzamos trendek feltétele.</strong> Ezt a 4. kitérő ellenőrzi.</li>
+    </ol>
+
+    <h4>1. Ugyanazokat a csoportokat hasonlítsd!</h4>
+    <p><span class="tag mini" style="margin-left:0">Minipélda</span> Két terület, alap- és mesterképzés, előtte és utána. A
+      szabály <strong>minden alapképzést pontosan −30%-kal</strong> vitt le, és mindenkit ért egy közös −10%-os sokk (kezelt:
+      × 0,9 × 0,7 = × 0,63; kontroll: × 0,9). A csavar: a Művészet mesterképzés <strong>előtte még nem létezett</strong>,
+      utána indult 10 fővel.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Egység</th><th class="num">Előtte</th><th class="num">Utána</th></tr></thead>
+      <tbody>
+        <tr><td>Gazdaság alap (kezelt)</td><td class="num">1 000</td><td class="num">630</td></tr>
+        <tr><td>Gazdaság mester (kontroll)</td><td class="num">500</td><td class="num">450</td></tr>
+        <tr><td>Művészet alap (kezelt)</td><td class="num">100</td><td class="num">63</td></tr>
+        <tr><td>Művészet mester (kontroll)</td><td class="num">–</td><td class="num">10</td></tr>
+      </tbody></table></div>
+    <p>A helyes válasz −30%. Háromféle számolás:</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Számolás</th><th>Mit hasonlít össze?</th><th>Excel</th><th class="num">Eredmény</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Átlagok aránya</strong></td><td>a kontroll-átlag 500-ról (450 + 10) / 2 = 230-ra „esik”</td><td>ÁTLAGHATÖBB</td><td class="num"><strong>+37,0%</strong></td></tr>
+        <tr><td><strong>Összegek aránya</strong>, minden sorral</td><td>a kontroll-összeg 500-ról 460-ra esik</td><td>SZUMHATÖBB</td><td class="num"><strong>−31,5%</strong></td></tr>
+        <tr class="hl"><td><strong>Összegek aránya, csak a közös egységekkel</strong></td><td>a Művészet mester kimarad</td><td>SZUMHATÖBB + segédoszlop</td><td class="num"><strong>−30,0%</strong></td></tr>
+      </tbody></table></div>
+    <ul>
+      <li><strong>Átlagokkal</strong> a kicsi új képzés lehúzza a kontroll-átlagot, ehhez képest a kezelt „nőtt”: +37%. Teljesen hamis.</li>
+      <li><strong>Összegekkel</strong> sokkal jobb, de a 10 új fő itt is torzít egy kicsit (−31,5%).</li>
+      <li><strong>Csak a közös egységekkel</strong> pontosan <strong>−30,0%</strong> jön ki.</li>
+    </ul>
+    <div class="callout tip"><div class="ct">Hüvelykujjszabály</div>
+      <p>Összegekkel számolj, ne átlagokkal, és ha egységek jönnek-mennek, nézd meg az eredményt csak a közös egységekkel is.
+        Ha a kettő közel van, maradhatsz a teljes összegnél.</p></div>
+
+    <p><strong>A valódi adaton</strong> <span class="tag extra">Kiegészítés</span> (14 képzési terület × 2 szint, részidő,
+      2017–22) egyetlen ilyen egység van: művészetközvetítés mesterképzés (bázis: –, gát: 7 fő). Pont a minipélda helyzete.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Számolás</th><th class="num">Gát-hatás 2020–22</th></tr></thead>
+      <tbody>
+        <tr><td>Összegek aránya, minden egységgel (a dián)</td><td class="num">−28,98%</td></tr>
+        <tr><td>Összegek aránya, csak a közös egységekkel</td><td class="num">−28,96%</td></tr>
+      </tbody></table></div>
+    <p>A különbség elhanyagolható: a néhány fő a 27 ezres kontroll-összegben elvész. Ezért maradhatunk a teljes összegnél.</p>
+
+    <h4>2. Mennyire egységes a hatás? <span class="tag extra">Kiegészítés</span></h4>
+    <p>Az összegekből számolt arányban a nagy területek (gazdaságtudományok, pedagógusképzés) nagyobb súllyal szerepelnek.
+      Nézzük meg ezért a gát-hatást <strong>területenként külön</strong>: ugyanaz a képlet, csak a SZUMHATÖBB-be egy további
+      feltétel kerül (<code>KEPZESI_TERULET</code>).</p>
+    <figure class="chart" id="chTer" style="box-shadow:none">
+      <div class="ttl">A 13 terület saját gát-hatása</div>
+      <div class="sub">Pont mérete = a terület részidős alapképzési jelentkezői a bázisban. Függőleges vonal = az összesített −29%</div>
+      <div class="plot"></div>
+    </figure>
+    <p>A 13 területből <strong>12-ban negatív</strong> a gát-hatás. A terjedelem <strong>−60%</strong>
+      (államtudományi) és <strong>+6%</strong> (művészet) között van (Excelben MIN és MAX). A két legnagyobb
+      terület: gazdaságtudományok −36%, pedagógusképzés −23%. A hatás mérete eltér, de az iránya szinte
+      mindenhol ugyanaz; az egyetlen pozitív érték egy nagyon kicsi területé. Kimaradt: művészetközvetítés (a bázisban nem
+      volt részidős mesterképzése). Ez <strong>leírás</strong>, nem próba.</p>
+
+    <div class="callout warn">
+      <div class="ct"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2 1.5 13.5h13L8 2Z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>Buktatók az arányok hányadosánál</div>
+      <ul>
+        <li><strong>Ne vonj ki, hanem ossz.</strong> A −29% nem „29 százalékponttal kevesebb”, hanem „0,71-szerese a vártnak”.
+          Két változás összekapcsolása: (1 + a) / (1 + b) − 1.</li>
+        <li><strong>Ne átlagolj, hanem összegezz.</strong> Az átlag érzékeny arra, hány egység van a mintában.</li>
+        <li><strong>A kontroll csak azt szűri ki, ami mindkét csoportot ugyanúgy érte.</strong> Ha egy sokk csak az egyiket éri
+          (pl. a pedagógus-mesterképzést 2024-ben a béremelés), az a hatásba kerül. Ezért kell az évenkénti bontás.</li>
+      </ul>
+    </div>
+
+    <h4>Összefoglalás</h4>
+    <ol class="summary-list">
+      <li><strong>Különbségek különbsége arányokkal:</strong> R = kezelt / kontroll időszakonként, hatás = R(után) / R(előtte) − 1.
+        Négy összeg (mindegyik levelező + távoktatás SZUMHATÖBB-je) és két osztás (<code>Részidő_7_dia</code>).</li>
+      <li><strong>Ugyanazok a csoportok</strong> <span class="tag extra">Kiegészítés</span>: ha egységek jönnek-mennek, számold ki csak a közös egységekkel is.</li>
+      <li><strong>Egységesség</strong> <span class="tag extra">Kiegészítés</span>: ugyanez a képlet területenként.</li>
+      <li><strong>Bizonytalanság:</strong> nem számszerűsítjük, hanem a további ellenőrzések egybehangzásából következtetünk.</li>
+    </ol>
+
+    <details class="qa qa-group"><summary>✏️ Gyakorlás – arányok hányadosa (5 feladat)</summary>
+      <div class="inner">
+        <details class="qa"><summary><span class="qn">1.</span>Kezelt: 400 → 280, kontroll: 300 → 270. Mennyi a DiD-hatás? Hogyan írnád be Excelbe?</summary>
+          <div class="ans"><p>Hatás: (280/270) / (400/300) − 1 = <strong>−22,2%</strong>. Excelben például <code>=(B3/C3)/(B2/C2)-1</code>,
+            ahol a 2. sor az előtte, a 3. sor az utána időszak, a B oszlop a kezelt, a C a kontroll.</p></div></details>
+        <details class="qa"><summary><span class="qn">2.</span>A gát éveiben 2 100 jelentkezőt figyeltünk meg, a gát-hatás −30%. Hány jelentkező „hiányzik”?</summary>
+          <div class="ans"><p>Szabály nélkül 2 100 / 0,7 = 3 000 lett volna, tehát <strong>900</strong> hiányzik. Nem 2 100 · 0,3 = 630,
+            mert a −30% a szabály nélküli (nagyobb) számhoz képest értendő.</p></div></details>
+        <details class="qa"><summary><span class="qn">3.</span>Egy kicsi <em>kezelt</em> egység csak a szabály után jelenik meg. Átlagokkal számolva merre torzul a becslés?</summary>
+          <div class="ans"><p>A kezelt cellák átlaga lecsökken, a kezelt csoport látszólag zsugorodik: a hatás <strong>negatívabbnak</strong>
+            tűnik. Összegekkel a torzítás kicsi (és ellenkező irányú). A biztos megoldás: csak a közös egységekkel is kiszámolni.</p></div></details>
+        <details class="qa"><summary><span class="qn">4.</span>Nagy terület: alap 1 000 → 700, mester 500 → 500. Kicsi: alap 100 → 100, mester 100 → 100. Mennyi a hatás területenként és összesítve?</summary>
+          <div class="ans"><p>Nagy: (700/500) / (1 000/500) − 1 = <strong>−30%</strong>. Kicsi: <strong>0%</strong>. Összesítve: (800/600) /
+            (1 100/600) − 1 = <strong>−27,3%</strong>. Az összesített szám a nagy területhez van közel, ezért érdemes területenként is megnézni.</p></div></details>
+        <details class="qa"><summary><span class="qn">5.</span>Melyik Excel-függvénnyel számolod a 2020–22-es részidős alapképzési jelentkezők összegét egyetlen cellában?</summary>
+          <div class="ans"><p><strong>SZUMHATÖBB</strong>, két darab összege (levelező + távoktatás), az évtartománnyal a feltételben, ahogy a
+            <code>Részidő_13_dia</code> lapon:</p>
+            <div class="formula">=SZUMHATÖBB(JELENTKEZOK_ELSO_HELYES; ELJARAS_TIPUS; "A"; ELJARAS_EV; "&gt;="&amp;20; ELJARAS_EV; "&lt;="&amp;22; KEPZESI_SZINT; "Alapképzés (BA/BSc)"; MUNKAREND; "Levelező")
+ + SZUMHATÖBB(…; MUNKAREND; "Távoktatás")</div>
+            <p>Eredmény: 47 654 fő (<code>Részidő_7_dia</code> B20).</p></div></details>
+      </div>
+    </details>
+  </div>
+
+  <!-- Kitérő 4 -->
+  <div class="card kitero" id="k4">
+    <p class="eyebrow">Statisztikai kitérő 4 · 8. dia</p>
+    <h3>Eseményelemzés – ellenőrizzük a párhuzamos trendeket</h3>
+    <p><strong>Mi ez?</strong> Az eseményelemzés <strong>minden évre külön</strong> kiszámolja az alap/mester arányt, és a
+      2019-eshez viszonyítja: <strong>R(év) / R(2019) − 1</strong>. Így két dolgot látunk egyszerre:</p>
+    <ol>
+      <li><strong>A szabály előtti években</strong> (2017–18) az eltérésnek a nulla közelében kell lennie. Ha így van, a
+        párhuzamos trendek feltétele teljesül.</li>
+      <li><strong>A szabály éveiben</strong> látjuk, hogy a hatás egyszeri volt-e, vagy végig tartott.</li>
+    </ol>
+    <p><strong>Excelben</strong> (<code>Részidő_8_dia</code>): évenként az alap- és a mesterképzés összege, egy osztás
+      (<code>=B6/C6</code>), majd <code>=D6/D$12-1</code> (a 12. sor a 2019, a <code>$</code> rögzíti).</p>
+    <p><strong>Miért kell?</strong> A párhuzamos trendeket nem lehet bizonyítani, csak valószínűsíteni. A szabály előtti évek
+      mintázata a legjobb próba, ami rendelkezésünkre áll.</p>
+    <p style="margin:0"><span class="tag mini" style="margin-left:0">Minipélda</span> Ha a kontroll kávézó már az áremelés előtti
+      hónapokban is minden hónapban 3%-kal fogyott, a kezelt pedig nem, a kettő nem „párhuzamos”. Az eseményelemzés ábráján ezt
+      úgy látnád, hogy a pontok már az esemény előtt sem a nullán vannak.</p>
+  </div>
+
+  <figure class="chart" id="chEs">
+    <div class="ttl">Eseményelemzés: az alap/mester arány évenként, 2019 = 0</div>
+    <div class="sub">Sötétebb sáv = a gát évei. Referencia: 2019, a szabály előtti utolsó év. A nappali vonal kiegészítés</div>
+    <div class="plot"></div>
+  </figure>
+  <div class="stats">
+    <div class="stat"><div class="l">Részidő, a gát évei (2020–22)</div><div class="v">−31% … −34%</div><div class="c">a 2019-es alap/mester arányhoz képest</div></div>
+    <div class="stat"><div class="l">Részidő, a szabály előtt (2017–18)</div><div class="v">≈ 0</div><div class="c">2017: −7%, 2018: −8%, a gát-évekhez képest kicsi</div></div>
+  </div>
+  <ul>
+    <li><strong>2020–2022:</strong> három éven át stabilan −30,9% és −33,9% között (2020: −33,9%, 2021: −30,9%,
+      2022: −32,8%). A hatás nem egyszeri zökkenő volt, hanem amíg a szabály élt, tartott.</li>
+    <li><strong>2023:</strong> visszaugrik a nulla közelébe (+6,7%). A nyitással a hatás eltűnt.</li>
+    <li><strong>2017–2018:</strong> −6,8% és −7,6%. A gát idejéhez képest kicsi: a két csoport nagyjából együtt mozgott.</li>
+    <li><strong>Nappalin</strong> <span class="tag extra">Kiegészítés</span> a gát éveiben csak −12% és −17%
+      közötti az eltérés: a szabály ott is hatott, de jóval gyengébben (erre épít a hármas különbség).</li>
+  </ul>
+  <div class="callout warn">
+    <div class="ct"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2 1.5 13.5h13L8 2Z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>Becsületes megjegyzés</div>
+    <p>A párhuzamosság nem tökéletes. 2013–16-ban az alapképzés gyorsabban nőtt, mint a mester (a bal oldali pontok
+      −18% és −26% között). Ha ez a trend folytatódott volna, a gát nélkül 2020–22-ben magasabb arányt várnánk,
+      vagyis a −29% inkább <em>alá</em>becsüli a hatást. 2017–19-ben a pontok már a nulla közelében vannak. A 2024–26-os
+      −15% körüli pontok oka, hogy a részidős <em>mester</em>képzés 2024-től gyorsan nőtt, nem az alapképzés esett vissza.</p>
+  </div>
+  <div class="xl"><b>Excel</b><span><code>Részidő_8_dia</code> (csak részidős): E oszlop, kártyák B24:C25.</span></div>
+</section>
+
+<!-- ===================== 4. A MECHANIZMUS ===================== -->
+<section id="mechanizmus" class="part-sec">
+  <h2><span class="part">4. rész</span>A mechanizmus: hogyan hatott a 280 pont? <span class="dia">9–11. dia</span></h2>
+  <p>Tudjuk, <em>hogy</em> hatott a szabály. De <em>hogyan</em>? 2023-ban nemcsak az emelt érettségi szűnt meg, hanem a
+    jogszabályi <strong>minimum 280 pont</strong> is. 2015 és 2022 között egyetlen alapképzésre sem lehetett 280 pont alatt
+    bejutni. Ha a minimum valóban a felnőtteket szűrte, 2023-ban meg kell jelenniük a 280 alatti ponthatároknak, és
+    <strong>főleg részidős képzéseken</strong>.</p>
+  <p>Itt már a <strong>ponthatárokkal</strong> dolgozunk. Csak azokat az alapképzési sorokat nézzük, ahová legalább egy
+    hallgatót felvettek, és van ponthatár. <strong>Állami ösztöndíjas</strong> = „Államilag támogatott” vagy „Állami
+    ösztöndíjjal támogatott”, minden más önköltséges.</p>
+
+  <div class="callout warn">
+    <div class="ct"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2 1.5 13.5h13L8 2Z"/><path d="M8 6.5v3M8 11.6v.1"/></svg>Excel-buktató: a PONTHATAR oszlop részben szövegként van tárolva</div>
+    <p>A <code>'294'</code> típusú értékeket a DARABHATÖBB / SZUMHATÖBB <code>"&lt;280"</code> feltétele <strong>csendben
+      kihagyja</strong>: rossz számot kapsz, hibaüzenet nélkül. Ezért minden ponthatáros számolás az Excelben
+      <strong>SZORZATÖSSZEG</strong> képlettel megy, és a ponthatárt <code>ÉRTÉK(0&amp;PONTHATAR)</code> alakítja számmá (a
+      <code>0&amp;</code> miatt a szöveg és a szám is számmá válik, az üres cella 0 lesz). A „van ponthatár” feltétel:
+      <code>HOSSZ(PONTHATAR)&gt;0</code>. Például a 280 alatti részidős állami sorok száma 2023-ban (<code>Részidő_9_dia</code> C16):</p>
+    <div class="formula">=SZORZATÖSSZEG((f_EV=23)*(f_TIPUS="A")*(f_SZINT="Alapképzés (BA/BSc)")*((f_MUNKAREND="Levelező")+(f_MUNKAREND="Távoktatás"))*((f_FINANSZ="Államilag támogatott")+(f_FINANSZ="Állami ösztöndíjjal támogatott"))*(f_FELVETT&gt;0)*(HOSSZ(f_PONTHATAR)&gt;0)*(ÉRTÉK(0&amp;f_PONTHATAR)&lt;280))</div>
+    <p>Az <code>f_*</code> nevek az adatlap oszlopainak elnevezett tartományai (Képletek → Névkezelő). A „vagy” feltételt a
+      zárójeles összeadás adja: <code>(A)+(B)</code>. A notebookban és ezen az oldalon ez a gond nem jön elő, mert ott a
+      ponthatár már szám.</p>
+  </div>
+
+  <figure class="chart" id="ch9">
+    <div class="ttl">Részidős alapképzés: hány sor ponthatára volt 280 alatt? <span class="dia">9. dia</span></div>
+    <div class="sub">2015–2022: a jogszabály tiltotta (0%). 2013–14-ben még alacsonyabb volt a minimum</div>
+    <div class="plot"></div>
+  </figure>
+  <p>Részidős, állami ösztöndíjas sorokon 2022-ben <strong>0 a 383-ból</strong>, 2023-ban
+    <strong>125 a 492-ből</strong> (25%) volt 280 alatt. Önköltséges részidős sorokon 2023-ban ez az arány
+    43%. Az arány Excelben két SZORZATÖSSZEG hányadosa: a 280 alatti sorok száma osztva az összes (ponthatáros, felvett)
+    sorral (<code>Részidő_9_dia</code>, D és G oszlop). Látványos, de lehet-e véletlen? Ehhez egy 2×2-es táblát kell tesztelni.</p>
+
+  <div class="card kitero" id="k5">
+    <p class="eyebrow">Statisztikai kitérő 5</p>
+    <h3>Khi-négyzet próba – két arány összehasonlítása</h3>
+    <p><strong>Mi ez?</strong> Egy 2×2-es táblázatról (két csoport × igen/nem) azt kérdezi: ha a két csoportban valójában
+      ugyanakkora lenne az „igen” aránya, mekkora eséllyel jönne ki ilyen (vagy nagyobb) eltérés pusztán véletlenből?</p>
+    <p><strong>A gondolat.</strong> Ha nincs különbség, mindkét csoportban a közös arányt várnánk. Ebből minden cellára
+      kiszámolható egy <strong>várt érték</strong> (V). A <strong>χ²</strong> azt méri, mennyire tér el a megfigyelt (M) a
+      várttól. Minél nagyobb, annál kevésbé hihető, hogy csak véletlen.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Lépés</th><th>Képlet</th><th>Excel</th></tr></thead>
+      <tbody>
+        <tr><td>1. Megfigyelt gyakoriságok (M)</td><td>a négy cella darabszáma</td><td>SZORZATÖSSZEG (a szöveges ponthatár miatt); „280 vagy fölött” = összes − 280 alatt</td></tr>
+        <tr><td>2. Sor- és oszlopösszegek, N</td><td></td><td>összeadás / SZUM</td></tr>
+        <tr><td>3. Várt érték (V)</td><td>sorösszeg × oszlopösszeg / N</td><td><code>=$D35*B$37/$D$37</code></td></tr>
+        <tr><td>4. Khi-négyzet</td><td>χ² = Σ (M − V)² / V</td><td><code>=SZORZATÖSSZEG((B35:C36-B39:C40)^2/B39:C40)</code></td></tr>
+        <tr><td>5. Szabadságfok</td><td>(sorok − 1) × (oszlopok − 1) = 1</td><td></td></tr>
+        <tr><td>6. Kritikus érték</td><td>ha χ² nagyobb ennél, szignifikáns</td><td>KHINÉGYZET.INVERZ.JOBB <code>(0,05; 1)</code> = 3,84, <code>(0,001; 1)</code> = 10,83</td></tr>
+        <tr><td>7. p-érték</td><td>esélye, hogy ekkora χ² véletlenből jöjjön</td><td>KHINÉGYZET.ELOSZLÁS.JOBB <code>(χ²; 1)</code></td></tr>
+        <tr><td>6–7. egyben</td><td>p-érték közvetlenül</td><td>KHINÉGYZET.PRÓBA <code>(M tartomány; V tartomány)</code></td></tr>
+      </tbody></table></div>
+    <p class="small muted">A cellahivatkozások a <code>Részidő_9_dia</code> lap 3. blokkjáé: B35:C36 a megfigyelt, B39:C40 a
+      várt tábla, D35:D36 a sorösszegek, B37:C37 az oszlopösszegek, D37 a végösszeg.</p>
+    <p><strong>Feltétel:</strong> minden <em>várt</em> érték legyen <strong>legalább 5</strong>. Ha nem, a próba közelítése
+      megbízhatatlan.</p>
+
+    <p><span class="tag mini" style="margin-left:0">Minipélda</span> Két osztályban (40-40 fő) megkérdezzük, ki iszik kávét: az
+      A osztályban 8, a B-ben 20. Lehet ez véletlen?</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th class="num">Kávét iszik</th><th class="num">Nem iszik</th><th class="num">Összesen</th></tr></thead>
+      <tbody>
+        <tr><td>A osztály</td><td class="num">8 <span class="muted">(várt 14,0)</span></td><td class="num">32 <span class="muted">(várt 26,0)</span></td><td class="num">40</td></tr>
+        <tr><td>B osztály</td><td class="num">20 <span class="muted">(várt 14,0)</span></td><td class="num">20 <span class="muted">(várt 26,0)</span></td><td class="num">40</td></tr>
+        <tr class="total"><td>Összesen</td><td class="num">28</td><td class="num">52</td><td class="num">80</td></tr>
+      </tbody></table></div>
+    <ol>
+      <li><strong>Várt értékek:</strong> az A osztály kávésai: 40 × 28 / 80 = 14. Ha nincs különbség, mindkét osztályban a közös
+        arányt (28/80 = 35%) várnánk. Minden várt érték 5 fölött van.</li>
+      <li><strong>χ²</strong> = (8 − 14)²/14 + (32 − 26)²/26 + (20 − 14)²/14 + (20 − 26)²/26 = <strong>7,91</strong>.</li>
+      <li><strong>Kritikus érték</strong> 5%-on: KHINÉGYZET.INVERZ.JOBB(0,05; 1) = 3,84. A 7,91 nagyobb ennél.</li>
+      <li><strong>p-érték:</strong> KHINÉGYZET.ELOSZLÁS.JOBB(7,91; 1) → <strong>p = 0,005</strong>.</li>
+    </ol>
+    <p style="margin:0">A különbség 5%-os szinten szignifikáns: ha a két osztály egyforma lenne, ekkora eltérés csak kb.
+      5 esetben jönne ki ezerből.</p>
+  </div>
+
+  <p><strong>A valódi adaton</strong> (részidős, állami ösztöndíjas alapképzési sorok, 2022 vs. 2023):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th></th><th class="num">280 alatt</th><th class="num">280 vagy fölött</th><th class="num">Összesen</th></tr></thead>
+    <tbody>
+      <tr><td>2022</td><td class="num">0</td><td class="num">383</td><td class="num">383</td></tr>
+      <tr><td>2023</td><td class="num">125</td><td class="num">367</td><td class="num">492</td></tr>
+      <tr class="total"><td>Összesen</td><td class="num">125</td><td class="num">750</td><td class="num">875</td></tr>
+    </tbody></table></div>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Lépés</th><th class="num">Érték</th></tr></thead>
+    <tbody>
+      <tr><td>Várt értékek (sorösszeg × oszlopösszeg / N)</td><td class="num">54,71 / 328,29 / 70,29 / 421,71</td></tr>
+      <tr><td>Mind nagyobb 5-nél?</td><td class="num">igen (a legkisebb 54,71)</td></tr>
+      <tr><td>(M − V)² / V cellánként</td><td class="num">54,71 / 9,12 / 42,59 / 7,10</td></tr>
+      <tr class="hl"><td><strong>χ²</strong> (az összegük)</td><td class="num"><strong>113,5</strong></td></tr>
+      <tr><td>Szabadságfok</td><td class="num">1</td></tr>
+      <tr><td>Kritikus érték 0,1%-on: KHINÉGYZET.INVERZ.JOBB(0,001; 1)</td><td class="num">10,83</td></tr>
+      <tr class="hl"><td><strong>p-érték</strong>: KHINÉGYZET.ELOSZLÁS.JOBB(113,5; 1)</td><td class="num"><strong>p < 0,001</strong> (kb. 1,7e-26)</td></tr>
+    </tbody></table></div>
+  <p>A χ² = 113,5 messze a 0,1%-os kritikus érték (10,83) fölött van: a különbség nem a véletlen műve. A 2022-es
+    nullás cella nem gond: a feltétel a <strong>várt</strong> értékekre vonatkozik, és ezek mind nagyok. Az intézmények
+    2023-ban azonnal éltek az új mozgástérrel.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_9_dia</code>, 3. blokk: χ² a B41, p-érték a B43, kritikus érték a B44 cellában.</span></div>
+
+  <figure class="chart" id="ch10">
+    <div class="ttl">Ponthatárok eloszlása, részidős állami ösztöndíjas alapképzés <span class="dia">10. dia</span></div>
+    <div class="sub">2022-ben a sorok fele a 280-as „falnál” állt. 2023-ban a fal leomlott. 20 pontos sávok</div>
+    <div class="plot"></div>
+  </figure>
+
+  <div class="card kitero" id="k6">
+    <p class="eyebrow">Statisztikai kitérő 6 · 10. dia</p>
+    <h3>Leíró eloszlás-összevetés – az alja vagy a közepe mozdult?</h3>
+    <ul>
+      <li><strong>Kinyílt-e az eloszlás alja?</strong> → a <strong>legkisebb érték</strong> (MIN) és a 280 alatti sorok aránya (SZORZATÖSSZEG).</li>
+      <li><strong>Elmozdult-e a tipikus érték?</strong> → a <strong>medián</strong>: az érték, aminél a sorok fele alacsonyabb, fele magasabb.</li>
+      <li><strong>Az egész alak</strong> → <strong>hisztogram</strong> 20 pontos sávokban: sávonként egy SZORZATÖSSZEG a
+        <code>(ÉRTÉK(0&amp;f_PONTHATAR)&gt;=$A6)*(ÉRTÉK(0&amp;f_PONTHATAR)&lt;$A6+20)</code> feltétellel, majd sorok / összes.</li>
+    </ul>
+    <p><strong>Excelben</strong> (<code>Részidő_10_dia</code>) a feltételes MIN és MEDIÁN <strong>tömbképlet</strong>, mert csak
+      a kiválasztott sorok ponthatárát kell nézni: <code>=MIN(HA((f_EV=B$4-2000)*…*(HOSSZ(f_PONTHATAR)&gt;0); ÉRTÉK(0&amp;f_PONTHATAR)))</code>,
+      ugyanígy <code>=MEDIÁN(HA(…))</code>. Régebbi Excelben Ctrl+Shift+Enterrel kell bevinni. A MINHA a szöveges ponthatár
+      miatt itt nem jó.</p>
+    <p><strong>Miért medián, és nem átlag?</strong> A ponthatárok nem haranggörbe alakúak: 2022-ben a sorok fele 280 körül
+      tornyosul, 2023-ban pedig megjelent néhány nagyon alacsony érték. Az átlagot a szélső értékek elhúzzák, a mediánt alig.</p>
+    <p><span class="tag mini" style="margin-left:0">Minipélda</span> Két csoport, <strong>ugyanazzal a mediánnal (50)</strong>:</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th></th><th>Értékek (mindegyik 8-szor)</th><th class="num">MIN</th><th class="num">MEDIÁN</th><th class="num">MAX</th></tr></thead>
+      <tbody>
+        <tr><td>Szoros csoport</td><td>46, 48, 50, 52, 54</td><td class="num">46</td><td class="num">50</td><td class="num">54</td></tr>
+        <tr><td>Széles csoport</td><td>20, 35, 50, 65, 80</td><td class="num">20</td><td class="num">50</td><td class="num">80</td></tr>
+      </tbody></table></div>
+    <p style="margin:0">A medián szerint a két csoport egyforma, a MIN és a MAX viszont elárulja, hogy a széles csoport
+      <strong>szétterült</strong>. A kettő együtt mondja el a teljes történetet.</p>
+  </div>
+
+  <p><strong>A valódi adaton</strong> (részidős állami ösztöndíjas alapképzési sorok ponthatára):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th></th><th class="num">Sorok száma</th><th class="num">Legkisebb ponthatár</th><th class="num">Medián</th><th class="num">280 alatti sorok</th></tr></thead>
+    <tbody>
+      <tr><td>2022</td><td class="num">383</td><td class="num">280</td><td class="num">294</td><td class="num">0%</td></tr>
+      <tr class="hl"><td>2023</td><td class="num">492</td><td class="num"><strong>108</strong></td><td class="num"><strong>299,5</strong></td><td class="num">25%</td></tr>
+    </tbody></table></div>
+  <div class="stats">
+    <div class="stat"><div class="l">Az alja kinyílt: legalacsonyabb ponthatár</div><div class="v">280 → 108</div><div class="c">pont, 2022 → 2023</div></div>
+    <div class="stat"><div class="l">A közepe alig mozdult: medián</div><div class="v">294 → 299,5</div><div class="c">pont, még egy kicsit emelkedett is</div></div>
+  </div>
+  <p><strong>Emberi nyelven:</strong> nem lett mindenhol könnyebb bejutni. A legtöbb képzés ponthatára maradt, ahol volt. Csak
+    az <strong>alsó szegmensben nyílt ki a kapu</strong>: azok a képzések, amelyek eddig a 280-as falnál álltak, most lejjebb
+    mehettek.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_10_dia</code>: 1. blokk a hisztogram, B30:C31 a MIN és a MEDIÁN tömbképlettel.</span></div>
+
+  <div class="card kitero" id="k7">
+    <p class="eyebrow">Statisztikai kitérő 7 · 11. dia</p>
+    <h3>Arányok összevetése és rétegzés</h3>
+    <p>Az utolsó mechanizmus-kérdés: igaz-e, hogy a 280 alatti ponthatár <strong>részidős képzéseken gyakoribb</strong>, mint
+      nappalin?</p>
+    <ul>
+      <li><strong>Arány:</strong> 10 sorból 2 van 280 alatt → 20%. Excelben két darabszám hányadosa (SZORZATÖSSZEG-gel).</li>
+      <li><strong>Szorzó:</strong> a részidős arány osztva a nappalival. Részidőn 40%, nappalin 20% → szorzó 2. Szorzó = 1:
+        nincs különbség.</li>
+    </ul>
+    <p><strong>Miért nem elég a nyers szorzó?</strong> Mert lehet <strong>zavaró tényező</strong>: valami, ami a munkarenddel
+      és a ponthatárral is összefügg. Az önköltséges képzéseknek eleve alacsonyabb a ponthatára, és részidőn több az
+      önköltséges.</p>
+    <p><strong>A megoldás: rétegzés.</strong> A sorokat szétválogatjuk a zavaró tényező szerint (állami / önköltséges), és
+      <strong>csoportonként külön</strong> számoljuk a szorzót. Ha a csoportokon belül is megmarad, nem a zavaró tényező okozza.
+      Excelben a SZORZATÖSSZEG-be egy további szorzótényező kerül, például
+      <code>*((f_FINANSZ="Államilag támogatott")+(f_FINANSZ="Állami ösztöndíjjal támogatott"))</code>.</p>
+    <p><span class="tag mini" style="margin-left:0">Minipélda: a zavaró tényező csapdája</span> Két terület. Mindkettőn belül
+      a részidős és a nappali sorok ugyanakkora arányban vannak 280 alatt (<em>valójában nincs</em> munkarend-hatás). De a
+      részidős sorok többsége az „alacsony pontos” területen van.</p>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>Terület</th><th>Munkarend</th><th class="num">280 alatt</th><th class="num">280 fölött</th><th class="num">Arány</th></tr></thead>
+      <tbody>
+        <tr><td>Alacsony pontos</td><td>Részidős</td><td class="num">40</td><td class="num">40</td><td class="num">50%</td></tr>
+        <tr><td>Alacsony pontos</td><td>Nappali</td><td class="num">10</td><td class="num">10</td><td class="num">50%</td></tr>
+        <tr><td>Magas pontos</td><td>Részidős</td><td class="num">2</td><td class="num">18</td><td class="num">10%</td></tr>
+        <tr><td>Magas pontos</td><td>Nappali</td><td class="num">8</td><td class="num">72</td><td class="num">10%</td></tr>
+      </tbody></table></div>
+    <ul>
+      <li><strong>Nyers szorzó</strong> (területeket összeöntve): részidőn 42/100 = 42%, nappalin 18/100 = 18%, szorzó
+        <strong>2,33×</strong> → úgy tűnik, részidőn sokkal gyakoribb.</li>
+      <li><strong>Az alacsony pontos területen belül:</strong> szorzó = 1,00×</li>
+      <li><strong>A magas pontos területen belül:</strong> szorzó = 1,00×</li>
+    </ul>
+    <p style="margin:0">A nyers szám félrevezet: a különbséget a terület okozza, nem a munkarend. Rétegzés után eltűnik.</p>
+  </div>
+
+  <p><strong>A valódi adaton</strong> (2023–26, alapképzési sorok, ahová vettek fel és van ponthatár):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Csoport</th><th class="num">Részidős: 280 alatt / összes</th><th class="num">Részidős arány</th><th class="num">Nappali: 280 alatt / összes</th><th class="num">Nappali arány</th><th class="num">Szorzó</th></tr></thead>
+    <tbody><tr><td>Összesen (nyers)</td><td class=num>1 992 / 4 207</td><td class=num>47%</td><td class=num>1 869 / 6 289</td><td class=num>30%</td><td class=num><strong>1,59×</strong></td></tr>
+<tr><td>Állami ösztöndíjas</td><td class=num>758 / 2 052</td><td class=num>37%</td><td class=num>943 / 3 888</td><td class=num>24%</td><td class=num><strong>1,52×</strong></td></tr>
+<tr><td>Önköltséges</td><td class=num>1 234 / 2 155</td><td class=num>57%</td><td class=num>926 / 2 401</td><td class=num>39%</td><td class=num><strong>1,48×</strong></td></tr></tbody></table></div>
+  <div class="stats">
+    <div class="stat"><div class="l">Nyers szorzó (részidős / nappali)</div><div class="v">1,6×</div><div class="c">47% vs. 30%</div></div>
+    <div class="stat"><div class="l">Állami ösztöndíjas sorokon</div><div class="v">1,52×</div><div class="c">37% vs. 24%</div></div>
+    <div class="stat"><div class="l">Önköltséges sorokon</div><div class="v">1,48×</div><div class="c">57% vs. 39%</div></div>
+  </div>
+  <p><strong>Olvasat:</strong> kb. 1,5× mindkét csoportban, tehát <strong>nem a finanszírozási forma miatt</strong> gyakoribb
+    részidőn a 280 alatti ponthatár. <strong>Miért kellett bontani?</strong> Mert a részidős sorok 51%-a önköltséges, a
+    nappaliaknak csak 38%-a, és önköltséges soron eleve gyakoribb a 280 alatti ponthatár (nappalin is 39% vs.
+    24%). A nyers 1,6× egy kis része ezért a finanszírozási összetételből jön; bontás után marad kb. 1,5×. A minimum
+    tehát éppen azokat szűrte, akik levelezőre jelentkeznek: a régen érettségizett felnőtteket.</p>
+  <div class="xl"><b>Excel</b><span><code>Részidő_11_dia</code>, 2. blokk (B15:H17; a szorzó a H oszlop). Az önköltséges sorok
+    aránya: részidőn C17 / C15, nappalin F17 / F15.</span></div>
+  <p class="muted small">Ugyanígy bonthatnál terület vagy intézmény szerint is. Minél több a réteg, annál kisebbek a cellák,
+    ezért itt a legfontosabb zavaró tényezőnél, a finanszírozásnál álltunk meg.</p>
+
+  <h3>Hány felvett hallgatót érint ez? <span class="dia">11. dia</span></h3>
+  <figure class="chart" id="ch11">
+    <div class="ttl">Felvett részidős alapképzésesek 280 alatti ponthatárú soron</div>
+    <div class="sub">2022-ben a jogszabály miatt 0%. Felső becslés, lásd lent</div>
+    <div class="plot"></div>
+  </figure>
+  <p>2023-ban a felvett részidős alapképzésesek közül <strong>38%</strong> (8 770 fő a 22 926-ból) olyan soron
+    kezdett, ahol a ponthatár 280 alatt volt. Excelben (<code>Részidő_11_dia</code>, 1. blokk) két SZORZATÖSSZEG hányadosa, a
+    felvettek számával szorozva:</p>
+  <div class="formula">=SZORZATÖSSZEG((f_EV=$A7-2000)*…*(HOSSZ(f_PONTHATAR)&gt;0)*(ÉRTÉK(0&amp;f_PONTHATAR)&lt;280)*f_FELVETT)
+ / SZORZATÖSSZEG((f_EV=$A7-2000)*…*f_FELVETT)</div>
+  <p>Ez <strong>felső becslés</strong>: a ponthatár a felvettek <em>legalacsonyabb</em> pontszáma, így egy 280 alatti
+    ponthatárú soron is lehetnek olyanok, akiknek 280 fölött volt a pontjuk.</p>
+</section>
+
+<!-- ===================== 5. BIZTOS EZ VOLT ===================== -->
+<section id="biztos" class="part-sec">
+  <h2><span class="part">5. rész</span>Biztos, hogy ez volt? <span class="dia">12–13. dia</span></h2>
+  <p>Egy jó elemzés a végén megpróbálja megcáfolni saját magát. Két tesztet csinálunk.</p>
+
+  <div class="card kitero" id="k8">
+    <p class="eyebrow">Statisztikai kitérő 8 · 12. dia</p>
+    <h3>Placebo-teszt időben, rangsorral</h3>
+    <p><strong>Mi ez?</strong> Ha a szabály a magyarázat, <strong>csak a két reformévben</strong> (2020, 2023) szabad nagy
+      ugrást látni. Ezért <em>minden</em> egymást követő évpárra kiszámoljuk ugyanazt a DiD-et: <strong>R(év) / R(előző év) −
+      1</strong>, ahol R a részidős alap/mester arány. A nem reform-évpárok a „placebók”: ott látjuk a szokásos ingadozást.</p>
+    <p><strong>A rangsor.</strong> Minden évváltás kilengését előjel nélkül vesszük (ABS), és sorba rendezzük a legnagyobbtól
+      (SORSZÁM / RANK; az újabb SORSZÁM.EGY / RANK.EQ ugyanezt adja). A két reformévnek kell a rangsor élén állnia, és jól el
+      kell válnia a többitől. Nem kell hozzá semmilyen eloszlás-feltevés.</p>
+    <p><strong>Excelben</strong> (<code>Részidő_12_dia</code>): C oszlop <code>=D7/D6-1</code>, D oszlop <code>=ABS(C23)</code>,
+      E oszlop <code>=SORSZÁM(D23;$D$23:$D$35)</code>. A két legnagyobb kilengés éve
+      <code>=INDEX(A23:A35; HOL.VAN(1; E23:E35; 0))</code>, a többi terjedelme <code>=MINHA(C23:C35; B23:B35; "nem")</code> és
+      <code>=MAXHA(…)</code>.</p>
+    <p style="margin:0"><span class="tag mini" style="margin-left:0">Minipélda</span> Egy diák zh-pontjai: 70, 72, 68, 71, 69,
+      58. A változások előjel nélkül: 2, 4, 3, 2, 11. A rangsor élén a 11 áll, a többi 2 és 4 között: az utolsó zh-nál valami
+      történt.</p>
+  </div>
+
+  <figure class="chart" id="ch12">
+    <div class="ttl">Placebo időben: 13 évváltás, mindegyikre külön DiD <span class="dia">12. dia</span></div>
+    <div class="sub">Ha a szabály a magyarázat, csak a két kiemelt oszlop lóghat ki</div>
+    <div class="plot"></div>
+  </figure>
+  <p><strong>Eredmény:</strong> a 13 évváltás közül a két legnagyobb kilengés éppen a két reformév:
+    <strong>2023</strong> (+58,7%) és <strong>2020</strong> (−33,9%). A többi 11 évváltás −20,0%
+    (2024) és +13,0% (2017) között mozog. A legnagyobb nem reform-kilengés 2024, de ennek oka
+    ismert: a részidős mesterképzés gyors növekedése (a nevező nőtt, nem az alapképzés esett).</p>
+  <details class="tv"><summary>Teljes rangsor</summary>
+    <div class="tbl-wrap"><table><thead><tr><th class="num">Rang</th><th class="num">Év</th><th class="num">R(év) / R(előző) − 1</th><th>Típus</th></tr></thead>
+      <tbody><tr class=hl><td class=num>1</td><td class=num>2023</td><td class=num>+58,7%</td><td>Reformév</td></tr>
+<tr class=hl><td class=num>2</td><td class=num>2020</td><td class=num>−33,9%</td><td>Reformév</td></tr>
+<tr><td class=num>3</td><td class=num>2024</td><td class=num>−20,0%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>4</td><td class=num>2017</td><td class=num>+13,0%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>5</td><td class=num>2016</td><td class=num>+10,8%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>6</td><td class=num>2019</td><td class=num>+8,2%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>7</td><td class=num>2021</td><td class=num>+4,5%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>8</td><td class=num>2026</td><td class=num>−3,3%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>9</td><td class=num>2022</td><td class=num>−2,7%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>10</td><td class=num>2015</td><td class=num>−1,6%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>11</td><td class=num>2018</td><td class=num>−0,8%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>12</td><td class=num>2014</td><td class=num>+0,3%</td><td>Többi évváltás</td></tr>
+<tr><td class=num>13</td><td class=num>2025</td><td class=num>+0,2%</td><td>Többi évváltás</td></tr></tbody></table></div></details>
+
+  <div class="card kitero" id="k9">
+    <p class="eyebrow">Statisztikai kitérő 9 · 13. dia</p>
+    <h3>Hármas különbség arányokkal (DDD)</h3>
+    <p><strong>Mi ez?</strong> A gát-hatást (alap vs. mester) kiszámoljuk <strong>részidőn</strong> és <strong>nappalin</strong>
+      is, és a kettőt elosztjuk egymással: <strong>DDD = (1 + DiD<sub>részidő</sub>) / (1 + DiD<sub>nappali</sub>) − 1</strong>.
+      Excelben ez a két DiD-cella után egyetlen osztás.</p>
+    <p><strong>Miért kell?</strong> A mechanizmus-hipotézis szerint a szabály a <em>felnőtteket</em> sújtotta jobban. Ha ez
+      igaz, a részidős gát-hatás nagyobb, mint a nappali. Ráadásul kiszűr minden zavaró tényezőt, amely az alapképzést
+      munkarendtől függetlenül érte (pl. a COVID-os érettségi).</p>
+    <p style="margin:0"><span class="tag mini" style="margin-left:0">Minipélda</span> Az áremelés hatása (DiD) Budapesten −20%,
+      Debrecenben −5%. DDD: 0,80 / 0,95 − 1 ≈ <strong>−16%</strong>: Budapesten az áremelés 16%-kal erősebben hatott.</p>
+  </div>
+
+  <p><strong>A valódi adaton</strong> (Excel: <code>Részidő_13_dia</code>, 1. blokk; a részidős DiD ugyanaz, mint a 7. dián):</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th></th><th class="num">Gát-hatás (alap vs. mester, 2020–22 vs. 2017–19)</th></tr></thead>
+    <tbody>
+      <tr><td>Részidőn</td><td class="num">−29,0%</td></tr>
+      <tr><td>Nappalin</td><td class="num">−9,5%</td></tr>
+      <tr class="hl"><td><strong>Hármas különbség</strong> = (1 − 29,0%) / (1 − 9,5%) − 1</td><td class="num"><strong>−21,6%</strong></td></tr>
+    </tbody></table></div>
+  <p>A gát részidőn kb. 3-szor akkora volt, mint nappalin (−29% vs. −9%). A részidős alapképzés a
+    nappalihoz képest is −21,6%-kal maradt el: <strong>a szabály a felnőtteket sújtotta</strong>.</p>
+
+  <h3 id="alternativak">Alternatív magyarázatok: mi más lehetett még?</h3>
+  <p>Egy oksági állítás csak akkor erős, ha a riválisait is végigvettük. A szempont mindig ugyanaz: <strong>időzítés</strong>
+    (pont 2020-ban és 2023-ban hat-e?) és <strong>mintázat</strong> (pont a részidős alapképzést érinti-e, a mestert nem?).</p>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Magyarázat</th><th>Időzítés</th><th>Mintázat</th><th>Ítélet</th></tr></thead>
+    <tbody>
+      <tr class="hl"><td><strong>Emelt érettségi + 280 pont eltörlése</strong></td><td>✔ pontos</td><td>✔ 2020-ban tükörkép; a mester nem ugrik</td><td><strong>Fő ok</strong></td></tr>
+      <tr><td>Pedagógus-béremelés</td><td>részben: a nagy emelés 2024-ben jött</td><td>✖ az ugrás minden területen egyszerre jelent meg</td><td>2024-től erősítő tényező</td></tr>
+      <tr><td>COVID-visszapattanás</td><td>✖ 2021–22-ben elmaradt</td><td>✖ 2023-ban a 2019-es szint fölé ment</td><td>Nem magyarázza</td></tr>
+      <tr><td>Finanszírozás, keretszám</td><td>✖</td><td>✖ a részidős kínálat nem nőtt (3 489 → 3 477 sor)</td><td>Nem magyarázza</td></tr>
+    </tbody></table></div>
+  <p><strong>Honnan a kínálati szám?</strong> A meghirdetett részidős képzési sorok száma az általános eljárásban, minden
+    szinten. Itt nincs ponthatár, ezért a DARABHATÖBB jó:</p>
+  <div class="formula">=DARABHATÖBB(ELJARAS_TIPUS; "A"; ELJARAS_EV; B$13-2000; MUNKAREND; "Levelező") + DARABHATÖBB(…; MUNKAREND; "Távoktatás")</div>
+  <p>(<code>Részidő_13_dia</code> B14:C14.) A kínálat nem nőtt, miközben a részidős jelentkezők száma 63%-kal nőtt. A többi sor
+    időzítési és mintázati érv, ezekhez az Excelben sincs külön számítás. A DiD logikája itt is visszaköszön: minden olyan
+    magyarázat, amely a mesterképzést is ugyanúgy érintené (infláció, COVID), a kontrollcsoport miatt kiesik.</p>
+</section>
+
+<!-- ===================== ÖSSZEFOGLALÁS ===================== -->
+<section id="osszefoglalas" class="part-sec">
+  <h2><span class="part">Zárás</span>Összefoglalás: mit tanultunk?</h2>
+  <div class="card" style="border-top:3px solid var(--accent)">
+    <p><strong>A történet:</strong> a 2023-as részidős ugrás nem keresleti fordulat volt. A 2020-ban bevezetett emelt érettségi
+      három évre −29,0%-kal csökkentette a részidős alapképzésre jelentkezőket a mesterhez képest (≈ 19 400 fő), a
+      280 pontos minimum pedig éppen a felnőtt, régi érettségis jelentkezőket szűrte. Mindkét korlát eltörlése után a részidő
+      aránya tartósan 30%-ról 40% körülre emelkedett (2023: 38%, 2026: 41%).</p>
+    <p style="margin:0;font-size:1.08rem"><strong>A felvételi szabály nem technikai részlet: évente kb. 6–7 ezer felnőtt
+      jelentkező sorsáról dönt.</strong></p>
+  </div>
+  <h4>Korlátok (ezeket mindig mondd ki)</h4>
+  <ul>
+    <li>Megfigyelési adat, nem kísérlet. 2023-ban két szabály szűnt meg egyszerre, ezek hatása nem választható szét teljesen.</li>
+    <li>A felvi-export nem bont életkor szerint, így a „felnőttek” közvetett következtetés.</li>
+    <li><strong>Arányokkal dolgozunk:</strong> minden hatás összegek hányadosából jön, regressziós modellt nem használunk, ezért
+      minden szám Excelben is ellenőrizhető. Bizonytalanságot (a khi-négyzet próbán kívül) nem számszerűsítünk. A következtetés
+      a mintázatok <strong>egybehangzóságán</strong> alapul: időzítés, tükörkép, kontrollcsoport, eseményelemzés,
+      placebo-rangsor és hármas különbség (−21,6%) mind ugyanabba az irányba mutat.</li>
+    <li>Az összegekből számolt arányokban a nagy területek nagyobb súllyal szerepelnek. A területenkénti bontás szerint a hatás
+      iránya szinte mindenhol ugyanaz, a mérete eltér.</li>
+  </ul>
+
+  <h3 id="dontes">Döntési táblázat: melyik módszert mikor?</h3>
+  <div class="tbl-wrap"><table>
+    <thead><tr><th>Kérdés</th><th>Módszer</th><th>Miért ez?</th><th>Excel</th></tr></thead>
+    <tbody>
+      <tr><td>Különböző méretű csoportok mozgását hasonlítanád</td><td><strong>Indexálás</strong> (bázisév = 100)</td><td>mindenki ugyanonnan indul</td><td>osztás, <code>$</code>-os bázis</td></tr>
+      <tr><td>Okozott-e valamit egy esemény?</td><td><strong>Különbségek különbsége</strong></td><td>a kontroll kiszűri a mindenkit érintő hatásokat</td><td>SZUMHATÖBB, osztás</td></tr>
+      <tr><td>Ugyanazokat hasonlítom-e? <span class="tag extra">Kieg.</span></td><td><strong>Csak a közös egységekkel is</strong></td><td>az új vagy megszűnt egység ne torzítson</td><td>segédoszlop + SZUMHATÖBB</td></tr>
+      <tr><td>Mennyire egységes a hatás? <span class="tag extra">Kieg.</span></td><td><strong>Területenkénti DiD</strong></td><td>nem egy-két terület műve-e</td><td>SZUMHATÖBB, MIN, MAX</td></tr>
+      <tr><td>Teljesül-e a DiD feltétele?</td><td><strong>Eseményelemzés</strong>: R(év) / R(2019) − 1</td><td>az esemény előtti évek mutatják a párhuzamosságot</td><td>SZUMHATÖBB, osztás</td></tr>
+      <tr><td>Különbözik-e két arány, vagy véletlen?</td><td><strong>Khi-négyzet próba</strong> (várt ≥ 5)</td><td>a várt és a megfigyelt eltérését méri</td><td>SZORZATÖSSZEG, KHINÉGYZET.ELOSZLÁS.JOBB (vagy .PRÓBA)</td></tr>
+      <tr><td>Az eloszlás alja vagy a közepe mozdult?</td><td><strong>MIN, MEDIÁN, hisztogram</strong></td><td>a medián nem érzékeny a szélső értékekre</td><td>MIN(HA(…)), MEDIÁN(HA(…)), sávonként SZORZATÖSSZEG</td></tr>
+      <tr><td>Gyakoribb-e valami egy csoportban, nem egy zavaró tényező miatt?</td><td><strong>Arányok hányadosa, rétegezve</strong></td><td>a rétegen belül azonos körülmények</td><td>SZORZATÖSSZEG + ÉRTÉK(0&amp;PONTHATAR)</td></tr>
+      <tr><td>Különleges-e egy év?</td><td><strong>Placebo-teszt + rangsor</strong></td><td>a szokásos ingadozáshoz méri a kilengést</td><td>ABS, SORSZÁM, INDEX + HOL.VAN, MINHA / MAXHA</td></tr>
+      <tr><td>Erősebb-e a hatás egy alcsoportban?</td><td><strong>Hármas különbség</strong></td><td>két DiD hányadosa, a mechanizmust teszteli</td><td>osztás</td></tr>
+    </tbody></table></div>
+
+  <h3 id="kviz">Ellenőrizd magad!</h3>
+  <p class="muted">Gondold végig a választ, mielőtt kinyitod.</p>
+  <details class="qa"><summary><span class="qn">1.</span>Miért az első helyes jelentkezőket számoljuk, nem az összes jelentkezést?</summary>
+    <div class="ans"><p>Mert egy ember több helyre is jelentkezhet, így az összes jelentkezés ugyanazt az embert többször számolná. Az első
+      helyes jelentkező minden embert pontosan egyszer számol.</p></div></details>
+  <details class="qa"><summary><span class="qn">2.</span>Egy kezelt csoport 1 000 → 800, a kontroll 500 → 450. Mennyi a DiD-hatás?</summary>
+    <div class="ans"><p>Kezelt: −20%, kontroll: −10%. DiD = 0,80 / 0,90 − 1 ≈ <strong>−11,1%</strong>. Nem −10%, mert a változásokat
+      szorzószámként kezeljük, nem vonjuk ki egymásból.</p></div></details>
+  <details class="qa"><summary><span class="qn">3.</span>Miért összegekből számoljuk az arányt, és nem a csoportok átlagából?</summary>
+    <div class="ans"><p>Mert az átlag attól is függ, hány egység van a mintában. Egy kicsi új képzés lehúzza az átlagot, és a hatás hamisan jön
+      ki. Az összeget egy kicsi egység alig mozdítja.</p></div></details>
+  <details class="qa"><summary><span class="qn">4.</span>Mit csinálnál, ha az eseményelemzésben a 2017-es és 2018-as pontok −30%-nál lennének?</summary>
+    <div class="ans"><p>Akkor a párhuzamos trendek feltétele sérülne: a két csoport már a szabály előtt is eltávolodott egymástól. A DiD
+      ilyenkor nem megbízható: más kontrollcsoport kell, vagy sokkal óvatosabb következtetés.</p></div></details>
+  <details class="qa"><summary><span class="qn">5.</span>Egy 2×2-es táblában az egyik megfigyelt cella 0, de minden várt érték 50 fölött van. Használható a khi-négyzet próba?</summary>
+    <div class="ans"><p><strong>Igen.</strong> A feltétel a <em>várt</em> értékekre vonatkozik, nem a megfigyeltekre. A 280 pontos
+      táblában pont ez a helyzet: a 2022-es „280 alatt” cella 0, a legkisebb várt érték mégis kb. 55.</p></div></details>
+  <details class="qa"><summary><span class="qn">6.</span>A legalacsonyabb ponthatár 280-ról 108-ra esett, a medián alig mozdult. Mit jelent?</summary>
+    <div class="ans"><p>Az eloszlás alja kinyílt, de a tipikus érték nem változott érdemben. Nem lett mindenhol könnyebb bejutni, csak az
+      alsó szegmensben.</p></div></details>
+  <details class="qa"><summary><span class="qn">7.</span>A nyers szorzó 1,6×, finanszírozás szerint bontva mindkét csoportban kb. 1,5×. Mit jelent?</summary>
+    <div class="ans"><p>A részidős és a nappali különbség nagy része nem a finanszírozási forma miatt van. A nyers számban egy kis zavaró hatás
+      is benne volt, de azonos finanszírozás mellett is kb. 1,5× marad a szorzó.</p></div></details>
+  <details class="qa"><summary><span class="qn">8.</span>Mire jó a placebo-teszt?</summary>
+    <div class="ans"><p>Megmutatja a szokásos ingadozást azokban az években, amikor nem történt semmi. Ha a reformévek a kilengések
+      rangsorának élén állnak, és jól elválnak a többitől, az valódi hatás, nem zaj.</p></div></details>
+  <details class="qa"><summary><span class="qn">9.</span>Miért nem jó Excelben a DARABHATÖBB(PONTHATAR; "&lt;280") ebben az adatban?</summary>
+    <div class="ans"><p>Mert a <code>PONTHATAR</code> oszlop részben szövegként van tárolva, és a DARABHATÖBB a szöveges cellákat
+      hibaüzenet nélkül kihagyja. Ezért kell SZORZATÖSSZEG + <code>ÉRTÉK(0&amp;PONTHATAR)</code>.</p></div></details>
+
+  <footer>Forrás: felvi.hu statisztikai export (általános eljárás, 2013–2026). Az oldal a
+    <code>reszido_tananyag.py</code> notebookkal és az Excel <code>Részidő_3_dia</code> … <code>Részidő_13_dia</code> lapjaival
+    azonos számokat mutat; a <code>build_web.py</code> generálja.</footer>
+</section>
+</main>
+</div>
+
+<div id="tip" role="tooltip"></div>
+<script>
+/* A téma és a navigáció külön szkriptben fut, hogy akkor is működjön, ha a diagramok adata hiányzik. */
+(function () {
+"use strict";
+/* ---------- téma ---------- */
+const root = document.documentElement, tb = document.getElementById("themeBtn");
+function syncTheme() {
+  const dark = root.getAttribute("data-theme") === "dark";
+  document.getElementById("iconSun").style.display = dark ? "" : "none";
+  document.getElementById("iconMoon").style.display = dark ? "none" : "";
+  document.getElementById("themeLbl").textContent = dark ? "Világos" : "Sötét";
+}
+tb.addEventListener("click", () => {
+  const t = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  root.setAttribute("data-theme", t);
+  try { localStorage.setItem("tema", t); } catch (e) {}
+  syncTheme();
+});
+syncTheme();
+
+/* ---------- navigáció: aktív szakasz, haladás, mobilmenü ---------- */
+const links = Array.from(document.querySelectorAll("nav.toc a"));
+const targets = links.map(a => document.querySelector(a.getAttribute("href"))).filter(Boolean);
+function onScroll() {
+  const h = document.documentElement, p = h.scrollTop / Math.max(1, h.scrollHeight - h.clientHeight);
+  document.getElementById("progress").style.width = (p * 100) + "%";
+  let cur = targets[0];
+  targets.forEach(t => { if (t.getBoundingClientRect().top < 120) cur = t; });
+  links.forEach(a => a.classList.toggle("active", a.getAttribute("href") === "#" + cur.id));
+}
+addEventListener("scroll", onScroll, { passive: true });
+onScroll();
+document.getElementById("menuBtn").addEventListener("click", () => document.body.classList.toggle("nav-open"));
+links.forEach(a => a.addEventListener("click", () => document.body.classList.remove("nav-open")));
+})();
+</script>
+<script id="data" type="application/json">{"evek": [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026], "ba": {"Részidős": [14207, 17294, 16777, 19915, 20516, 21281, 22451, 13493, 18083, 16078, 32312, 31961, 33772, 36799], "Nappali": [50409, 52204, 51440, 51921, 49811, 51096, 54173, 43863, 46151, 47143, 55454, 49527, 55045, 58426]}, "index": {"Alapképzés": [63.3, 77.0, 74.7, 88.7, 91.4, 94.8, 100.0, 60.1, 80.5, 71.6, 143.9, 142.4, 150.4, 163.9], "Mesterképzés": [83.9, 101.9, 100.4, 107.6, 98.1, 102.6, 100.0, 90.9, 116.6, 106.5, 134.9, 166.8, 175.9, 198.1], "Osztatlan": [61.7, 79.0, 74.3, 89.8, 116.5, 113.4, 100.0, 104.2, 119.5, 101.2, 117.3, 113.3, 112.3, 145.4], "FOSZK": [50.3, 85.5, 97.3, 131.5, 87.6, 95.3, 100.0, 104.7, 148.0, 146.3, 134.9, 103.1, 76.9, 63.6]}, "hat6": [{"csoport": "2019 → 2020 (bevezetés)", "munkarend": "Részidős", "ertek": -0.399}, {"csoport": "2019 → 2020 (bevezetés)", "munkarend": "Nappali", "ertek": -0.1903}, {"csoport": "2022 → 2023 (eltörlés)", "munkarend": "Részidős", "ertek": 1.0097}, {"csoport": "2022 → 2023 (eltörlés)", "munkarend": "Nappali", "ertek": 0.1763}], "terulet": [{"terulet": "államtudományi", "hatas": -0.5956, "alap_bazis": 3237, "alap_gat": 1845}, {"terulet": "természettudomány", "hatas": -0.461, "alap_bazis": 564, "alap_gat": 342}, {"terulet": "informatika", "hatas": -0.4462, "alap_bazis": 3562, "alap_gat": 2776}, {"terulet": "sporttudomány", "hatas": -0.3858, "alap_bazis": 3073, "alap_gat": 2634}, {"terulet": "gazdaságtudományok", "hatas": -0.3633, "alap_bazis": 11869, "alap_gat": 8438}, {"terulet": "műszaki", "hatas": -0.3509, "alap_bazis": 8601, "alap_gat": 4877}, {"terulet": "jogi", "hatas": -0.307, "alap_bazis": 2024, "alap_gat": 1339}, {"terulet": "orvos- és egészségtudomány", "hatas": -0.2653, "alap_bazis": 4740, "alap_gat": 4180}, {"terulet": "pedagógusképzés", "hatas": -0.2262, "alap_bazis": 14470, "alap_gat": 8888}, {"terulet": "társadalomtudomány", "hatas": -0.1936, "alap_bazis": 3233, "alap_gat": 2994}, {"terulet": "agrár", "hatas": -0.1634, "alap_bazis": 3263, "alap_gat": 2330}, {"terulet": "bölcsészettudomány", "hatas": -0.0207, "alap_bazis": 5186, "alap_gat": 6502}, {"terulet": "művészet", "hatas": 0.0577, "alap_bazis": 109, "alap_gat": 183}], "did_gat": -0.2898, "es": {"Részidős": [-0.2462, -0.244, -0.2559, -0.1757, -0.0682, -0.0759, 0.0, -0.3389, -0.309, -0.3276, 0.0672, -0.1463, -0.1446, -0.1727], "Nappali": [-0.2785, -0.3153, -0.3131, -0.2607, -0.1221, -0.0647, 0.0, -0.1726, -0.1621, -0.1205, -0.0481, -0.155, -0.0861, -0.1325]}, "ar9": {"Állami ösztöndíjas": [0.6255, 0.6829, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.2541, 0.495, 0.4233, 0.307], "Önköltséges": [0.8316, 0.8177, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4306, 0.6402, 0.6275, 0.583]}, "ar9_n": {"Állami ösztöndíjas": [[167, 267], [196, 287], [0, 312], [0, 333], [0, 340], [0, 384], [0, 399], [0, 368], [0, 410], [0, 383], [125, 492], [248, 501], [218, 515], [167, 544]], "Önköltséges": [[316, 380], [305, 373], [0, 393], [0, 407], [0, 410], [0, 419], [0, 417], [0, 369], [0, 409], [0, 401], [217, 504], [338, 528], [342, 545], [337, 578]]}, "hist": {"sav": [100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400, 420, 440, 460, 480], "2022": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.5196, 0.0862, 0.1149, 0.0705, 0.0313, 0.0104, 0.1462, 0.0157, 0.0026, 0.0026, 0.0], "2022_n": [0, 0, 0, 0, 0, 0, 0, 0, 0, 199, 33, 44, 27, 12, 4, 56, 6, 1, 1, 0], "2023": [0.002, 0.002, 0.0081, 0.0102, 0.0163, 0.0467, 0.0325, 0.0549, 0.0813, 0.2459, 0.126, 0.0955, 0.0732, 0.061, 0.0528, 0.063, 0.0163, 0.0122, 0.0, 0.0], "2023_n": [1, 1, 4, 5, 8, 23, 16, 27, 40, 121, 62, 47, 36, 30, 26, 31, 8, 6, 0, 0]}, "felvett11": [{"ev": 2022, "felvett": 10588, "alatt": 0, "arany": 0.0}, {"ev": 2023, "felvett": 22926, "alatt": 8770, "arany": 0.3825}, {"ev": 2024, "felvett": 22150, "alatt": 13189, "arany": 0.5954}, {"ev": 2025, "felvett": 23076, "alatt": 12248, "arany": 0.5308}, {"ev": 2026, "felvett": 24297, "alatt": 10402, "arany": 0.4281}], "placebo": [{"ev": 2014, "valt": 0.0029, "rang": 12, "reform": false}, {"ev": 2015, "valt": -0.0158, "rang": 10, "reform": false}, {"ev": 2016, "valt": 0.1079, "rang": 5, "reform": false}, {"ev": 2017, "valt": 0.1304, "rang": 4, "reform": false}, {"ev": 2018, "valt": -0.0083, "rang": 11, "reform": false}, {"ev": 2019, "valt": 0.0822, "rang": 6, "reform": false}, {"ev": 2020, "valt": -0.3389, "rang": 2, "reform": true}, {"ev": 2021, "valt": 0.0452, "rang": 7, "reform": false}, {"ev": 2022, "valt": -0.0269, "rang": 9, "reform": false}, {"ev": 2023, "valt": 0.5872, "rang": 1, "reform": true}, {"ev": 2024, "valt": -0.2001, "rang": 3, "reform": false}, {"ev": 2025, "valt": 0.0019, "rang": 13, "reform": false}, {"ev": 2026, "valt": -0.0328, "rang": 8, "reform": false}]}</script>
+<script>
+(function () {
+"use strict";
+const nyersAdat = document.getElementById("data").textContent.trim();
+if (nyersAdat === "{{" + "DATA}}") {
+  // A nyers sablont nyitották meg: a {{…}} helyőrzőket és a diagramadatot a build_web.py tölti ki.
+  const n = document.createElement("div");
+  n.className = "sablon-figyelmeztetes";
+  n.innerHTML = "Ez a <code>web_template.html</code> nyers sablon: a <code>{{…}}</code> helyőrzőket és a diagramokat a <code>build_web.py</code> tölti ki. A kész tananyag: <code>reszido_tananyag_web.html</code>.";
+  document.body.prepend(n);
+  return;
+}
+const D = JSON.parse(nyersAdat);
+const NS = "http://www.w3.org/2000/svg";
+
+/* ---------- formázás ---------- */
+function hu(x, d) {
+  d = d || 0;
+  const s = Math.abs(x).toFixed(d).split(".");
+  s[0] = s[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  return (x < 0 && Number(Math.abs(x).toFixed(d)) !== 0 ? "−" : "") + s.join(",");
+}
+function pct(x, d, sign) {
+  if (d === undefined) d = 0;
+  const v = x * 100, r = Math.abs(v).toFixed(d).replace(".", ",");
+  if (Number(Math.abs(v).toFixed(d)) === 0) return r + "%";
+  return (v < 0 ? "−" : (sign ? "+" : "")) + r + "%";
+}
+
+/* ---------- segédek ---------- */
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function txt(parent, x, y, s, attrs) {
+  const t = el("text", Object.assign({ x: x, y: y }, attrs || {}), parent);
+  t.textContent = s;
+  return t;
+}
+function niceTicks(lo, hi, n) {
+  const span = hi - lo || 1, raw = span / (n || 5), mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(s => s >= raw);
+  const a = Math.floor(lo / step) * step, b = Math.ceil(hi / step) * step, out = [];
+  for (let v = a; v <= b + step / 2; v += step) out.push(Math.round(v / step) * step);
+  return out;
+}
+const tip = document.getElementById("tip");
+function showTip(evt, head, rows) {
+  tip.replaceChildren();
+  const h = document.createElement("div"); h.className = "h"; h.textContent = head; tip.appendChild(h);
+  rows.forEach(r => {
+    const d = document.createElement("div"); d.className = "r";
+    if (r.color) { const i = document.createElement("i"); i.style.background = r.color; d.appendChild(i); }
+    const b = document.createElement("b"); b.textContent = r.value; d.appendChild(b);
+    if (r.label) { const s = document.createElement("span"); s.textContent = r.label; d.appendChild(s); }
+    tip.appendChild(d);
+  });
+  const pad = 14, w = tip.offsetWidth, hgt = tip.offsetHeight;
+  let x = evt.clientX + pad, y = evt.clientY + pad;
+  if (x + w > innerWidth - 8) x = evt.clientX - w - pad;
+  if (y + hgt > innerHeight - 8) y = evt.clientY - hgt - pad;
+  tip.style.left = x + "px"; tip.style.top = y + "px"; tip.style.opacity = 1;
+}
+function hideTip() { tip.style.opacity = 0; }
+function legend(fig, items) {
+  let lg = fig.querySelector(".legend");
+  if (!lg) { lg = document.createElement("div"); lg.className = "legend"; fig.querySelector(".plot").before(lg); }
+  lg.replaceChildren();
+  items.forEach(it => {
+    const s = document.createElement("span"), i = document.createElement("i");
+    if (it.box) i.className = "box";
+    i.style.background = it.color; s.appendChild(i); s.appendChild(document.createTextNode(it.name)); lg.appendChild(s);
+  });
+}
+function tableView(fig, head, rows) {
+  let d = fig.querySelector("details.tv");
+  if (!d) {
+    d = document.createElement("details"); d.className = "tv";
+    const s = document.createElement("summary"); s.textContent = "Adatok táblázatban"; d.appendChild(s);
+    const w = document.createElement("div"); w.className = "tbl-wrap"; d.appendChild(w);
+    fig.appendChild(d);
+  }
+  const t = document.createElement("table"), th = document.createElement("thead"), tr = document.createElement("tr");
+  head.forEach((h, i) => { const c = document.createElement("th"); c.textContent = h; if (i) c.className = "num"; tr.appendChild(c); });
+  th.appendChild(tr); t.appendChild(th);
+  const tb = document.createElement("tbody");
+  rows.forEach(r => {
+    const row = document.createElement("tr");
+    r.forEach((v, i) => { const c = document.createElement("td"); c.textContent = v; if (i) c.className = "num"; row.appendChild(c); });
+    tb.appendChild(row);
+  });
+  t.appendChild(tb);
+  d.querySelector(".tbl-wrap").replaceChildren(t);
+}
+
+/* ---------- vonaldiagram (crosshair + tooltip) ---------- */
+function lineChart(fig, o) {
+  const box = fig.querySelector(".plot");
+  function draw() {
+    const W = Math.max(box.clientWidth, 280), H = o.height || 280;
+    const narrow = W < 520;
+    const longest = Math.max.apply(null, o.series.map(s => s.name.length));
+    const m = { t: 18, r: o.endLabels ? (narrow ? 52 : 52 + longest * 6.4) : 16, b: 30, l: 48 };
+    const xs = o.x, iw = W - m.l - m.r, ih = H - m.t - m.b;
+    const all = []; o.series.forEach(s => s.values.forEach(v => { if (v !== null && v !== undefined) all.push(v); }));
+    let lo = o.yMin !== undefined ? o.yMin : Math.min.apply(null, all), hi = o.yMax !== undefined ? o.yMax : Math.max.apply(null, all);
+    if (o.zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+    const ticks = niceTicks(lo, hi, 5); lo = ticks[0]; hi = ticks[ticks.length - 1];
+    const x0 = xs[0], x1 = xs[xs.length - 1] + (o.step ? o.stepW || 0 : 0);
+    const X = v => m.l + (v - x0) / (x1 - x0) * iw, Y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": fig.querySelector(".ttl").textContent });
+    if (o.band) el("rect", { class: "band", x: X(o.band[0]), y: m.t, width: X(o.band[1]) - X(o.band[0]), height: ih }, svg);
+    const g = el("g", { class: "grid" }, svg);
+    ticks.forEach(t => { el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t) }, g); txt(svg, m.l - 8, Y(t) + 4, o.yFmt(t), { "text-anchor": "end" }); });
+    if (o.zero) el("line", { class: "base", x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0) }, svg);
+    else el("line", { class: "base", x1: m.l, x2: W - m.r, y1: Y(lo), y2: Y(lo) }, svg);
+    const xt = o.xTicks || xs;
+    xt.forEach((v, i) => { if (narrow && !o.xTicks && i % 2) return; txt(svg, X(v) + (o.step ? (o.stepW || 0) / 2 : 0) * 0, H - 8, o.xFmt ? o.xFmt(v) : String(v), { "text-anchor": "middle" }); });
+    (o.rules || []).forEach(r => {
+      el("line", { class: "rule", x1: X(r.x), x2: X(r.x), y1: m.t, y2: m.t + ih }, svg);
+      if (r.label) txt(svg, X(r.x) + 5, m.t + 11, r.label, { class: "lbl" });
+    });
+    // vonalak
+    const ends = [];
+    o.series.forEach(s => {
+      let d = "", pen = false;
+      s.values.forEach((v, i) => {
+        if (v === null || v === undefined) { pen = false; return; }
+        if (o.step) {
+          const xa = X(xs[i]), xb = X(xs[i] + o.stepW);
+          d += (pen ? "L" : "M") + xa + "," + Y(v) + "L" + xb + "," + Y(v);
+        } else d += (pen ? "L" : "M") + X(xs[i]) + "," + Y(v);
+        pen = true;
+      });
+      el("path", { d: d, fill: "none", style: `stroke:${s.color};stroke-width:2;stroke-linejoin:round;stroke-linecap:round` }, svg);
+      if (!o.step && o.markers !== false) s.values.forEach((v, i) => {
+        if (v === null || v === undefined) return;
+        el("circle", { cx: X(xs[i]), cy: Y(v), r: 3.5, style: `fill:${s.color};stroke:var(--surface);stroke-width:2` }, svg);
+      });
+      let li = s.values.length - 1; while (li >= 0 && (s.values[li] === null || s.values[li] === undefined)) li--;
+      if (li >= 0) ends.push({ y: Y(s.values[li]), x: X(xs[li]), s: s, v: s.values[li] });
+    });
+    if (o.endLabels) {
+      ends.sort((a, b) => a.y - b.y);
+      for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i - 1].y < 15) ends[i].y = ends[i - 1].y + 15;
+      ends.forEach(e => {
+        const t = txt(svg, e.x + 9, e.y + 4, "", { class: "lbl" });
+        const a = document.createElementNS(NS, "tspan"); a.setAttribute("class", "lbl-strong"); a.textContent = o.endFmt ? o.endFmt(e.v) : o.yFmt(e.v);
+        t.appendChild(a);
+        if (!narrow) { const b = document.createElementNS(NS, "tspan"); b.textContent = " " + e.s.name; t.appendChild(b); }
+      });
+    }
+    // crosshair
+    const xh = el("line", { class: "xhair", y1: m.t, y2: m.t + ih, style: "opacity:0" }, svg);
+    const dots = o.series.map(s => el("circle", { r: 5, style: `fill:${s.color};stroke:var(--surface);stroke-width:2;opacity:0` }, svg));
+    const hit = el("rect", { class: "hit", x: m.l, y: m.t, width: iw, height: ih }, svg);
+    function move(evt) {
+      const pt = svg.getBoundingClientRect(), px = (evt.clientX - pt.left) * (W / pt.width);
+      let bi = 0, bd = Infinity;
+      xs.forEach((v, i) => { const c = X(v) + (o.step ? (X(v + o.stepW) - X(v)) / 2 : 0); const dd = Math.abs(c - px); if (dd < bd) { bd = dd; bi = i; } });
+      const cx = X(xs[bi]) + (o.step ? (X(xs[bi] + o.stepW) - X(xs[bi])) / 2 : 0);
+      xh.setAttribute("x1", cx); xh.setAttribute("x2", cx); xh.style.opacity = 0.5;
+      const rows = [];
+      o.series.forEach((s, k) => {
+        const v = s.values[bi];
+        if (v === null || v === undefined) { dots[k].style.opacity = 0; return; }
+        dots[k].setAttribute("cx", cx); dots[k].setAttribute("cy", Y(v)); dots[k].style.opacity = 1;
+        rows.push({ color: s.color, value: o.tipFmt ? o.tipFmt(v, s, bi) : o.yFmt(v), label: s.name });
+      });
+      showTip(evt, o.tipHead ? o.tipHead(xs[bi]) : String(xs[bi]), rows);
+    }
+    hit.addEventListener("pointermove", move);
+    hit.addEventListener("pointerleave", () => { xh.style.opacity = 0; dots.forEach(d => d.style.opacity = 0); hideTip(); });
+    box.replaceChildren(svg);
+  }
+  draw();
+  new ResizeObserver(() => draw()).observe(box);
+  legend(fig, o.series.map(s => ({ name: s.name, color: s.color })));
+  if (o.series.length === 1) fig.querySelector(".legend").remove();
+  tableView(fig, [o.xName || "Év"].concat(o.series.map(s => s.name)),
+    o.x.map((x, i) => [o.xFmt ? o.xFmt(x) : String(x)].concat(o.series.map(s => s.values[i] === null || s.values[i] === undefined ? "–" : (o.tableFmt || o.yFmt)(s.values[i])))));
+}
+
+/* ---------- oszlopdiagram (csoportosított, értékcímke a végén) ---------- */
+function barChart(fig, o) {
+  const box = fig.querySelector(".plot");
+  function draw() {
+    const W = Math.max(box.clientWidth, 280), H = o.height || 270, m = { t: 22, r: 12, b: 30, l: 48 };
+    const iw = W - m.l - m.r, ih = H - m.t - m.b, cats = o.cats, groups = o.groups;
+    const vals = []; cats.forEach((c, i) => groups.forEach((g, j) => vals.push(o.value(i, j))));
+    const ticks = niceTicks(Math.min(0, Math.min.apply(null, vals)), Math.max(0, Math.max.apply(null, vals)), 5);
+    const lo = ticks[0], hi = ticks[ticks.length - 1], Y = v => m.t + ih - (v - lo) / (hi - lo) * ih;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": fig.querySelector(".ttl").textContent });
+    const g = el("g", { class: "grid" }, svg);
+    ticks.forEach(t => { el("line", { x1: m.l, x2: W - m.r, y1: Y(t), y2: Y(t) }, g); txt(svg, m.l - 8, Y(t) + 4, o.yFmt(t), { "text-anchor": "end" }); });
+    const slot = iw / cats.length, bw = Math.min(o.maxBar || 24, (slot * 0.7) / groups.length - 2);
+    cats.forEach((c, i) => {
+      const cx = m.l + slot * (i + 0.5), totalW = groups.length * bw + (groups.length - 1) * 2;
+      if (!o.hideCatLabels) txt(svg, cx, H - 8, o.catFmt ? o.catFmt(c, W) : c, { "text-anchor": "middle" });
+      groups.forEach((gr, j) => {
+        const v = o.value(i, j), x = cx - totalW / 2 + j * (bw + 2), y0 = Y(0), y1 = Y(v), r = Math.min(4, bw / 2, Math.abs(y1 - y0));
+        const top = Math.min(y0, y1), h = Math.abs(y1 - y0), up = v >= 0;
+        const d = up
+          ? `M${x},${y0}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${y0}Z`
+          : `M${x},${y0}V${top + h - r}Q${x},${top + h} ${x + r},${top + h}H${x + bw - r}Q${x + bw},${top + h} ${x + bw},${top + h - r}V${y0}Z`;
+        const color = o.color(i, j);
+        const p = el("path", { d: d, class: "bar", tabindex: 0, style: `fill:${color}` }, svg);
+        const lab = o.valFmt(v);
+        const show = o.labelIf ? o.labelIf(i, j, W) : true;
+        if (show) txt(svg, x + bw / 2, up ? y1 - 6 : y1 + 14, lab, { "text-anchor": "middle", class: "lbl-strong" });
+        const tipFn = evt => showTip(evt, o.tipHead ? o.tipHead(i, j) : c, [{ color: color, value: o.tipVal ? o.tipVal(i, j) : lab, label: groups.length > 1 ? gr.name : (o.tipLabel ? o.tipLabel(i, j) : "") }]);
+        p.addEventListener("pointermove", tipFn); p.addEventListener("pointerleave", hideTip);
+        p.addEventListener("focus", () => { const b = p.getBoundingClientRect(); tipFn({ clientX: b.right, clientY: b.top }); });
+        p.addEventListener("blur", hideTip);
+      });
+    });
+    el("line", { class: "base", x1: m.l, x2: W - m.r, y1: Y(0), y2: Y(0) }, svg);
+    box.replaceChildren(svg);
+  }
+  draw();
+  new ResizeObserver(() => draw()).observe(box);
+  if (o.legend) legend(fig, o.legend.map(l => Object.assign({ box: true }, l)));
+  tableView(fig, o.tableHead, o.tableRows);
+}
+
+/* ---------- pontdiagram: területenkénti hatás ---------- */
+function dotPlot(fig, rows, ref) {
+  const box = fig.querySelector(".plot");
+  function draw() {
+    const W = Math.max(box.clientWidth, 280), narrow = W < 560;
+    const m = { t: 22, r: 18, b: 30, l: narrow ? 128 : 200 }, rowH = 26, H = m.t + m.b + rows.length * rowH;
+    const iw = W - m.l - m.r, vals = rows.map(r => r.hatas);
+    const ticks = niceTicks(Math.min(0, Math.min.apply(null, vals)), Math.max(0, Math.max.apply(null, vals)), 6);
+    const lo = ticks[0], hi = ticks[ticks.length - 1], X = v => m.l + (v - lo) / (hi - lo) * iw;
+    const maxN = Math.max.apply(null, rows.map(r => r.alap_bazis)), R = n => 3.5 + Math.sqrt(n / maxN) * 11;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": fig.querySelector(".ttl").textContent });
+    const g = el("g", { class: "grid" }, svg);
+    ticks.forEach(t => { el("line", { x1: X(t), x2: X(t), y1: m.t, y2: H - m.b }, g); txt(svg, X(t), H - 8, pct(t, 0, true), { "text-anchor": "middle" }); });
+    el("line", { class: "base", x1: X(0), x2: X(0), y1: m.t, y2: H - m.b }, svg);
+    el("line", { class: "rule", x1: X(ref), x2: X(ref), y1: m.t - 6, y2: H - m.b }, svg);
+    txt(svg, X(ref) + 5, m.t - 9, "összesen " + pct(ref, 0, true), { class: "lbl" });
+    rows.forEach((r, i) => {
+      const y = m.t + rowH * (i + 0.5);
+      let name = r.terulet; if (narrow && name.length > 19) name = name.slice(0, 18) + "…";
+      txt(svg, m.l - 10, y + 4, name, { "text-anchor": "end", class: "lbl" });
+      el("line", { x1: X(0), x2: X(r.hatas), y1: y, y2: y, style: "stroke:var(--grid);stroke-width:2" }, svg);
+      const c = el("circle", { cx: X(r.hatas), cy: y, r: R(r.alap_bazis), tabindex: 0, style: "fill:var(--s1);fill-opacity:.85;stroke:var(--surface);stroke-width:2;cursor:default" }, svg);
+      const hitc = el("rect", { x: m.l, y: y - rowH / 2, width: iw, height: rowH, style: "fill:transparent" }, svg);
+      const f = evt => showTip(evt, r.terulet, [{ color: "var(--s1)", value: pct(r.hatas, 1, true), label: "gát-hatás" },
+        { value: hu(r.alap_bazis), label: "alap, bázis (fő)" }, { value: hu(r.alap_gat), label: "alap, gát (fő)" }]);
+      [c, hitc].forEach(n => { n.addEventListener("pointermove", f); n.addEventListener("pointerleave", hideTip); });
+    });
+    box.replaceChildren(svg);
+  }
+  draw();
+  new ResizeObserver(() => draw()).observe(box);
+  tableView(fig, ["Terület", "Gát-hatás", "Alap, bázis (fő)", "Alap, gát (fő)"],
+    rows.map(r => [r.terulet, pct(r.hatas, 1, true), hu(r.alap_bazis), hu(r.alap_gat)]));
+}
+
+/* ================= a diagramok ================= */
+const ev = D.evek, C = { s1: "var(--s1)", s2: "var(--s2)", s3: "var(--s3)", s4: "var(--s4)", gray: "var(--s-gray)" };
+
+// 4. dia – munkarend-választóval
+const f4 = document.getElementById("ch4");
+function render4(mr) {
+  const s = D.ba[mr], i19 = ev.indexOf(2019), i20 = ev.indexOf(2020), i22 = ev.indexOf(2022), i23 = ev.indexOf(2023);
+  const v20 = s[i20] / s[i19] - 1, v23 = s[i23] / s[i22] - 1;
+  document.getElementById("ch4ttl").textContent = mr + " alapképzés: első helyes jelentkezők";
+  lineChart(f4, {
+    x: ev, series: [{ name: mr + " alapképzés", color: mr === "Részidős" ? C.s1 : C.s2, values: s }],
+    yFmt: v => v >= 10000 ? hu(v / 1000) + " ezer" : hu(v), tipFmt: v => hu(v) + " fő", tableFmt: v => hu(v), yMin: 0,
+    rules: [{ x: 2019.5, label: "2020: emelt kötelező" }, { x: 2022.5, label: "2023: eltörölve" }],
+    endLabels: false
+  });
+  document.getElementById("ch4txt").innerHTML = "";
+  const p = document.getElementById("ch4txt");
+  p.textContent = `${mr} alapképzés · bevezetés (2019 → 2020): ${pct(v20, 0, true)} · eltörlés (2022 → 2023): ${pct(v23, 0, true)}`;
+  f4.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.mr === mr));
+}
+f4.querySelectorAll(".seg button").forEach(b => b.addEventListener("click", () => render4(b.dataset.mr)));
+render4("Részidős");
+
+// 5. dia – index
+const szin5 = { "Alapképzés": C.s1, "Mesterképzés": C.s2, "Osztatlan": C.s3, "FOSZK": C.s4 };
+lineChart(document.getElementById("ch5"), {
+  x: ev, series: Object.keys(D.index).map(k => ({ name: k, color: szin5[k], values: D.index[k] })),
+  yFmt: v => hu(v), tableFmt: v => hu(v, 1), tipFmt: v => hu(v, 1), endLabels: true,
+  rules: [{ x: 2019, label: "bázis: 2019 = 100" }]
+});
+
+// 6. dia – csoportosított oszlop
+barChart(document.getElementById("ch6"), {
+  cats: ["2019 → 2020 (bevezetés)", "2022 → 2023 (eltörlés)"], groups: [{ name: "Részidős" }, { name: "Nappali" }],
+  value: (i, j) => D.hat6[i * 2 + j].ertek, color: (i, j) => j ? C.s2 : C.s1, maxBar: 44,
+  yFmt: v => pct(v, 0, true), valFmt: v => pct(v, 0, true),
+  legend: [{ name: "Részidős", color: C.s1 }, { name: "Nappali", color: C.s2 }],
+  tableHead: ["Változás", "Részidős", "Nappali"],
+  tableRows: [0, 1].map(i => [D.hat6[i * 2].csoport, pct(D.hat6[i * 2].ertek, 1, true), pct(D.hat6[i * 2 + 1].ertek, 1, true)])
+});
+
+// Területek
+dotPlot(document.getElementById("chTer"), D.terulet, D.did_gat);
+
+// Eseményelemzés
+lineChart(document.getElementById("chEs"), {
+  x: ev, series: [{ name: "Részidős", color: C.s1, values: D.es["Részidős"] }, { name: "Nappali", color: C.s2, values: D.es["Nappali"] }],
+  yFmt: v => pct(v, 0, true), tipFmt: v => pct(v, 1, true), zero: true, band: [2019.5, 2022.5], endLabels: true,
+  tipHead: x => x + " · R(év) / R(2019) − 1"
+});
+
+// 9. dia
+lineChart(document.getElementById("ch9"), {
+  x: ev, series: [{ name: "Állami ösztöndíjas", color: C.s1, values: D.ar9["Állami ösztöndíjas"] },
+                  { name: "Önköltséges", color: C.s2, values: D.ar9["Önköltséges"] }],
+  yFmt: v => pct(v, 0), yMin: 0, endLabels: true,
+  tipFmt: (v, s, i) => { const n = D.ar9_n[s.name][i]; return pct(v, 1) + (n ? ` (${hu(n[0])}/${hu(n[1])})` : ""); },
+  tableFmt: v => pct(v, 1)
+});
+
+// 10. dia – lépcsős hisztogram
+lineChart(document.getElementById("ch10"), {
+  x: D.hist.sav, step: true, stepW: 20, series: [{ name: "2022", color: C.gray, values: D.hist["2022"] }, { name: "2023", color: C.s1, values: D.hist["2023"] }],
+  yFmt: v => pct(v, 0), yMin: 0, xTicks: [100, 160, 220, 280, 340, 400, 460], xName: "Sáv (pont)",
+  rules: [{ x: 280, label: "280 pont" }], tipHead: x => `${x}–${x + 19} pont`,
+  tipFmt: (v, s, i) => pct(v, 1) + ` (${D.hist[s.name + "_n"][i]} sor)`, tableFmt: v => pct(v, 1),
+  xFmt: v => String(v)
+});
+
+// 11. dia – felvettek
+const f11 = D.felvett11;
+barChart(document.getElementById("ch11"), {
+  cats: f11.map(r => String(r.ev)), groups: [{ name: "Arány" }], value: i => f11[i].arany, color: () => C.s1, maxBar: 40,
+  yFmt: v => pct(v, 0), valFmt: v => pct(v, 0), tipVal: i => pct(f11[i].arany, 1),
+  tipLabel: i => `${hu(f11[i].alatt)} / ${hu(f11[i].felvett)} fő`, height: 240,
+  tableHead: ["Év", "Felvett (fő)", "280 alatti soron (fő)", "Arány"],
+  tableRows: f11.map(r => [String(r.ev), hu(r.felvett), hu(r.alatt), pct(r.arany, 1)])
+});
+
+// 12. dia – placebo
+const pl = D.placebo;
+barChart(document.getElementById("ch12"), {
+  cats: pl.map(r => String(r.ev)), groups: [{ name: "DiD" }], value: i => pl[i].valt,
+  color: i => pl[i].reform ? C.s1 : C.gray, yFmt: v => pct(v, 0, true), valFmt: v => pct(v, 0, true),
+  labelIf: (i, j, W) => pl[i].reform || W > 640, catFmt: (c, W) => W < 560 ? "’" + c.slice(2) : c,
+  tipHead: i => `${pl[i].ev - 1} → ${pl[i].ev}`, tipVal: i => pct(pl[i].valt, 1, true), tipLabel: i => `${pl[i].rang}. legnagyobb kilengés`,
+  legend: [{ name: "Reformév (2020, 2023)", color: C.s1 }, { name: "Többi évváltás", color: C.gray }],
+  tableHead: ["Évváltás", "DiD az előző évhez", "Rang"], tableRows: pl.map(r => [`${r.ev - 1} → ${r.ev}`, pct(r.valt, 1, true), String(r.rang)])
+});
+
+/* ---------- kávézó-kalkulátor ---------- */
+const ids = ["ke", "ku", "ce", "cu"].map(i => document.getElementById(i));
+function calc() {
+  const [ke, ku, ce, cu] = ids.map(i => Math.max(1, Number(i.value) || 1));
+  const kv = ku / ke - 1, cv = cu / ce - 1, d = (ku / cu) / (ke / ce) - 1;
+  document.getElementById("o_k").textContent = pct(kv, 1, true);
+  document.getElementById("o_c").textContent = pct(cv, 1, true);
+  document.getElementById("o_d").textContent = pct(d, 1, true);
+  document.getElementById("o_txt").textContent =
+    `Ha csak a kezelt kávézót néznéd, azt mondanád: az áremelés ${pct(kv, 1, true)}-ot okozott. De ebből ${pct(cv, 1, true)} a hidegfront volt, ami a kontrollt is érte. Az áremelés tiszta hatása ${pct(d, 1, true)}.`;
+  document.getElementById("o_arany").textContent = `(${hu(ku)}/${hu(cu)}) / (${hu(ke)}/${hu(ce)}) − 1 = ${pct(d, 1, true)}`;
+}
+ids.forEach(i => i.addEventListener("input", calc));
+calc();
+
+})();
+</script>
+</body>
+</html>
